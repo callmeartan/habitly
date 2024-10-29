@@ -1,6 +1,9 @@
+// lib/screens/habit_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:habitly/models/habit.dart';
+import '../models/habit.dart';
+import '../widgets/habit_card.dart';
+import '../widgets/habit_form.dart';
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -10,43 +13,182 @@ class HabitDashboard extends StatefulWidget {
 }
 
 class _HabitDashboardState extends State<HabitDashboard> {
-  List<Habit> habits = [
-    Habit(
-      id: 1,
-      name: 'Morning Meditation',
-      category: 'Health',
-      streak: 5,
-      frequency: 'daily',
-      completedToday: false,
-      progress: 0.85,
-    ),
-    Habit(
-      id: 2,
-      name: 'Read 30 Minutes',
-      category: 'Personal Development',
-      streak: 12,
-      frequency: 'daily',
-      completedToday: true,
-      progress: 0.92,
-    ),
-    Habit(
-      id: 3,
-      name: 'Weekly Exercise',
-      category: 'Health',
-      streak: 3,
-      frequency: 'weekly',
-      completedToday: false,
-      progress: 0.75,
-    ),
-  ];
+  List<Habit> habits = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHabits();
+  }
+
+  Future<void> _loadHabits() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      // Simulate loading time
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      setState(() {
+        habits = [
+          Habit(
+            id: 1,
+            name: 'Morning Meditation',
+            category: 'Health',
+            streak: 5,
+            frequency: 'daily',
+            completedToday: false,
+            progress: 0.85,
+          ),
+          Habit(
+            id: 2,
+            name: 'Read 30 Minutes',
+            category: 'Personal Development',
+            streak: 12,
+            frequency: 'daily',
+            completedToday: true,
+            progress: 0.92,
+          ),
+          Habit(
+            id: 3,
+            name: 'Weekly Exercise',
+            category: 'Health',
+            streak: 3,
+            frequency: 'weekly',
+            completedToday: false,
+            progress: 0.75,
+          ),
+        ];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load habits: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   void toggleHabitCompletion(int habitId) {
     setState(() {
       final habitIndex = habits.indexWhere((h) => h.id == habitId);
       if (habitIndex != -1) {
-        habits[habitIndex].completedToday = !habits[habitIndex].completedToday;
+        final habit = habits[habitIndex];
+        habits[habitIndex] = habit.copyWith(
+          completedToday: !habit.completedToday,
+        );
       }
     });
+  }
+
+  void _deleteHabit(int habitId) async {
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Habit'),
+          content: const Text('Are you sure you want to delete this habit?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  habits.removeWhere((habit) => habit.id == habitId);
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Habit deleted successfully')),
+                );
+              },
+              child: Text(
+                'Delete',
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete habit: $e')),
+      );
+    }
+  }
+
+  Future<void> _editHabit(Habit habit) async {
+    final formKey = GlobalKey<FormState>();
+    String name = habit.name;
+    String category = habit.category;
+    String frequency = habit.frequency;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Edit Habit',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: HabitForm(
+            initialName: name,
+            initialCategory: category,
+            initialFrequency: frequency,
+            onNameChanged: (value) => name = value,
+            onCategoryChanged: (value) => category = value ?? category,
+            onFrequencyChanged: (value) => frequency = value ?? frequency,
+            formKey: formKey,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  setState(() {
+                    final habitIndex = habits.indexWhere((h) => h.id == habit.id);
+                    if (habitIndex != -1) {
+                      habits[habitIndex] = habit.copyWith(
+                        name: name,
+                        category: category,
+                        frequency: frequency,
+                      );
+                    }
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Habit updated successfully')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+              ),
+              child: Text(
+                'Save Changes',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showAddHabitDialog() async {
@@ -54,9 +196,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
     String name = '';
     String category = 'Health';
     String frequency = 'daily';
-
-    final categories = ['Health', 'Personal Development', 'Work', 'Family', 'Other'];
-    final frequencies = ['daily', 'weekly', 'monthly'];
 
     await showDialog(
       context: context,
@@ -68,74 +207,18 @@ class _HabitDashboardState extends State<HabitDashboard> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Habit Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a habit name';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) => name = value,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(),
-                        ),
-                        value: category,
-                        items: categories.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            category = newValue!;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: 'Frequency',
-                          border: OutlineInputBorder(),
-                        ),
-                        value: frequency,
-                        items: frequencies.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            frequency = newValue!;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+          content: HabitForm(
+            initialName: name,
+            initialCategory: category,
+            initialFrequency: frequency,
+            onNameChanged: (value) => name = value,
+            onCategoryChanged: (value) => category = value ?? category,
+            onFrequencyChanged: (value) => frequency = value ?? frequency,
+            formKey: formKey,
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.pop(context),
               child: Text(
                 'Cancel',
                 style: GoogleFonts.poppins(color: Colors.grey),
@@ -156,7 +239,10 @@ class _HabitDashboardState extends State<HabitDashboard> {
                   setState(() {
                     habits.add(newHabit);
                   });
-                  Navigator.of(context).pop();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Habit added successfully')),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -173,10 +259,99 @@ class _HabitDashboardState extends State<HabitDashboard> {
     );
   }
 
+  Widget _buildStatCard(String title, String value, IconData icon) {
+    return Container(
+      width: 180,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(
+                icon,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error: $_error',
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadHabits,
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.poppins(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final completedToday = habits.where((h) => h.completedToday).length;
-    final averageProgress = (habits.fold<double>(
+    final averageProgress = habits.isEmpty
+        ? 0.0
+        : (habits.fold<double>(
       0,
           (sum, habit) => sum + habit.progress,
     ) /
@@ -187,7 +362,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
       backgroundColor: Colors.grey[100],
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -195,17 +370,28 @@ class _HabitDashboardState extends State<HabitDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Habitly Dashboard',
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      'Habitly',
+                      style: GoogleFonts.poppins(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: _showAddHabitDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Habit'),
+                    icon: const Icon(Icons.add, size: 22),
+                    label: Text(
+                      'Add Habit',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[600],
                       foregroundColor: Colors.white,
@@ -213,15 +399,18 @@ class _HabitDashboardState extends State<HabitDashboard> {
                         horizontal: 16,
                         vertical: 12,
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Stats Cards
               SizedBox(
-                height: 100,
+                height: 140,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -243,185 +432,71 @@ class _HabitDashboardState extends State<HabitDashboard> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Active Habits Section
               Text(
                 'Active Habits',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Habits List
               Expanded(
-                child: ListView.builder(
+                child: habits.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'No habits yet',
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Add a new habit to get started',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
                   itemCount: habits.length,
                   itemBuilder: (context, index) {
                     final habit = habits[index];
-                    return _buildHabitCard(habit);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: HabitCard(
+                        habit: habit,
+                        onEdit: () => _editHabit(habit),
+                        onDelete: () => _deleteHabit(habit.id),
+                        onToggleCompletion: () =>
+                            toggleHabitCompletion(habit.id),
+                      ),
+                    );
                   },
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-              Icon(icon, color: Colors.grey[400]),
-            ],
-          ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHabitCard(Habit habit) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    habit.name,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    habit.category,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-              TweenAnimationBuilder(
-                duration: const Duration(milliseconds: 300),
-                tween: Tween<double>(
-                  begin: 0,
-                  end: habit.completedToday ? 1 : 0,
-                ),
-                builder: (context, double value, child) {
-                  return Transform.scale(
-                    scale: 0.8 + (value * 0.2),
-                    child: IconButton(
-                      onPressed: () => toggleHabitCompletion(habit.id),
-                      icon: Icon(
-                        Icons.check_circle,
-                        color: Color.lerp(
-                          Colors.grey[300],
-                          Colors.green,
-                          value,
-                        ),
-                        size: 32,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.emoji_events, size: 16, color: Colors.amber[400]),
-              const SizedBox(width: 4),
-              Text(
-                'Streak: ${habit.streak} days',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const Spacer(),
-              Text(
-                habit.frequency,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TweenAnimationBuilder(
-            duration: const Duration(milliseconds: 500),
-            tween: Tween<double>(begin: 0, end: habit.progress),
-            builder: (context, double value, child) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: value,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
-                  minHeight: 8,
-                ),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
