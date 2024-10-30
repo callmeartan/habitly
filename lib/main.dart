@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:habitly/screens/habit_dashboard.dart';
+import 'package:habitly/screens/habit_dashboard.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Habitly',
+      title: 'habitly',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

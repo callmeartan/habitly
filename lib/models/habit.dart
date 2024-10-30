@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class Habit {
   final int id;
   String name;

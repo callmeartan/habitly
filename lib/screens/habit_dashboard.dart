@@ -1,4 +1,3 @@
-// lib/screens/habit_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/habit.dart';
@@ -375,7 +374,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
                       'Habitly',
                       style: GoogleFonts.poppins(
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                         color: Colors.grey[800],
                       ),
                       overflow: TextOverflow.ellipsis,
