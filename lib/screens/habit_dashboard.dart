@@ -1,11 +1,12 @@
+// lib/screens/habit_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/habit.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/habit_form.dart';
 import '../repositories/habit_repository.dart';
+import '../services/notification_service.dart';
 import 'dart:math' show max;
-
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class HabitDashboard extends StatefulWidget {
 
 class _HabitDashboardState extends State<HabitDashboard> {
   final _habitRepository = HabitRepository();
+  final NotificationService _notificationService = NotificationService();
   List<Habit> habits = [];
   bool _isLoading = true;
   String? _error;
@@ -23,6 +25,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
   @override
   void initState() {
     super.initState();
+    _notificationService.init();
     _loadHabits();
   }
 
@@ -45,6 +48,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
             frequency: 'daily',
             completedToday: false,
             progress: 0.85,
+            reminderTime: null,
           ),
           Habit(
             id: 2,
@@ -54,6 +58,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
             frequency: 'daily',
             completedToday: true,
             progress: 0.92,
+            reminderTime: null,
           ),
           Habit(
             id: 3,
@@ -63,6 +68,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
             frequency: 'weekly',
             completedToday: false,
             progress: 0.75,
+            reminderTime: null,
           ),
         ] : loadedHabits;
         _isLoading = false;
@@ -72,6 +78,16 @@ class _HabitDashboardState extends State<HabitDashboard> {
         _error = 'Failed to load habits: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _scheduleReminder(Habit habit) async {
+    if (habit.reminderTime != null) {
+      await _notificationService.scheduleHabitReminder(
+        id: habit.id,
+        habitName: habit.name,
+        scheduledTime: habit.reminderTime!,
+      );
     }
   }
 
@@ -111,6 +127,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
             ),
             TextButton(
               onPressed: () async {
+                await _notificationService.cancelReminder(habitId);
                 setState(() {
                   habits.removeWhere((habit) => habit.id == habitId);
                 });
@@ -140,6 +157,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
     String name = habit.name;
     String category = habit.category;
     String frequency = habit.frequency;
+    DateTime? reminderTime = habit.reminderTime;
 
     await showDialog(
       context: context,
@@ -155,9 +173,11 @@ class _HabitDashboardState extends State<HabitDashboard> {
             initialName: name,
             initialCategory: category,
             initialFrequency: frequency,
+            initialReminderTime: reminderTime,
             onNameChanged: (value) => name = value,
             onCategoryChanged: (value) => category = value ?? category,
             onFrequencyChanged: (value) => frequency = value ?? frequency,
+            onReminderTimeChanged: (value) => reminderTime = value,
             formKey: formKey,
           ),
           actions: [
@@ -178,10 +198,22 @@ class _HabitDashboardState extends State<HabitDashboard> {
                         name: name,
                         category: category,
                         frequency: frequency,
+                        reminderTime: reminderTime,
                       );
                     }
                   });
                   await _habitRepository.saveHabits(habits);
+                  
+                  if (reminderTime != habit.reminderTime) {
+                    if (habit.reminderTime != null) {
+                      await _notificationService.cancelReminder(habit.id);
+                    }
+                    if (reminderTime != null) {
+                      final habitIndex = habits.indexWhere((h) => h.id == habit.id);
+                      await _scheduleReminder(habits[habitIndex]);
+                    }
+                  }
+                  
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Habit updated successfully')),
@@ -207,6 +239,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
     String name = '';
     String category = 'Health';
     String frequency = 'daily';
+    DateTime? reminderTime;
 
     await showDialog(
       context: context,
@@ -222,9 +255,11 @@ class _HabitDashboardState extends State<HabitDashboard> {
             initialName: name,
             initialCategory: category,
             initialFrequency: frequency,
+            initialReminderTime: reminderTime,
             onNameChanged: (value) => name = value,
             onCategoryChanged: (value) => category = value ?? category,
             onFrequencyChanged: (value) => frequency = value ?? frequency,
+            onReminderTimeChanged: (value) => reminderTime = value,
             formKey: formKey,
           ),
           actions: [
@@ -246,11 +281,13 @@ class _HabitDashboardState extends State<HabitDashboard> {
                     frequency: frequency,
                     completedToday: false,
                     progress: 0.0,
+                    reminderTime: reminderTime,
                   );
                   setState(() {
                     habits.add(newHabit);
                   });
                   await _habitRepository.saveHabits(habits);
+                  await _scheduleReminder(newHabit);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Habit added successfully')),
@@ -378,7 +415,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -419,8 +455,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 ],
               ),
               const SizedBox(height: 32),
-
-              // Stats Cards
               SizedBox(
                 height: 140,
                 child: ListView(
@@ -445,8 +479,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // Active Habits Section
               Text(
                 'Active Habits',
                 style: GoogleFonts.poppins(
@@ -456,11 +488,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Habits List
               Expanded(
                 child: habits.isEmpty
-                    ? Center(
+                                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -503,8 +533,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
                                   toggleHabitCompletion(habit.id),
                             ),
                           );
-                        },   ),
-                     ),
+                        },
+                      ),
+              ),
             ],
           ),
         ),

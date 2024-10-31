@@ -1,3 +1,4 @@
+// lib/repositories/habit_repository.dart
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
@@ -7,15 +8,7 @@ class HabitRepository {
 
   Future<void> saveHabits(List<Habit> habits) async {
     final prefs = await SharedPreferences.getInstance();
-    final habitsJson = habits.map((habit) => {
-      'id': habit.id,
-      'name': habit.name,
-      'category': habit.category,
-      'streak': habit.streak,
-      'frequency': habit.frequency,
-      'completedToday': habit.completedToday,
-      'progress': habit.progress,
-    }).toList();
+    final habitsJson = habits.map((habit) => habit.toJson()).toList();
     await prefs.setString(_key, jsonEncode(habitsJson));
   }
 
@@ -26,15 +19,7 @@ class HabitRepository {
     if (habitsString == null) return [];
     
     final habitsList = jsonDecode(habitsString) as List;
-    return habitsList.map((habitJson) => Habit(
-      id: habitJson['id'],
-      name: habitJson['name'],
-      category: habitJson['category'],
-      streak: habitJson['streak'],
-      frequency: habitJson['frequency'],
-      completedToday: habitJson['completedToday'],
-      progress: habitJson['progress'],
-    )).toList();
+    return habitsList.map((habitJson) => Habit.fromJson(habitJson)).toList();
   }
 
   Future<void> clearHabits() async {

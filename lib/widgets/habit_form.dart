@@ -1,12 +1,16 @@
+// lib/widgets/habit_form.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HabitForm extends StatelessWidget {
   final String initialName;
   final String initialCategory;
   final String initialFrequency;
+  final DateTime? initialReminderTime;
   final Function(String) onNameChanged;
   final Function(String?) onCategoryChanged;
   final Function(String?) onFrequencyChanged;
+  final Function(DateTime?) onReminderTimeChanged;
   final GlobalKey<FormState> formKey;
 
   const HabitForm({
@@ -14,9 +18,11 @@ class HabitForm extends StatelessWidget {
     required this.initialName,
     required this.initialCategory,
     required this.initialFrequency,
+    this.initialReminderTime,
     required this.onNameChanged,
     required this.onCategoryChanged,
     required this.onFrequencyChanged,
+    required this.onReminderTimeChanged,
     required this.formKey,
   }) : super(key: key);
 
@@ -75,9 +81,59 @@ class HabitForm extends StatelessWidget {
               }).toList(),
               onChanged: onFrequencyChanged,
             ),
+            const SizedBox(height: 16),
+            ListTile(
+              title: Text(
+                'Set Reminder',
+                style: GoogleFonts.poppins(),
+              ),
+              subtitle: Text(
+                initialReminderTime != null
+                    ? 'Reminder set for ${_formatTime(initialReminderTime!)}'
+                    : 'No reminder set',
+                style: GoogleFonts.poppins(),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (initialReminderTime != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => onReminderTimeChanged(null),
+                    ),
+                  const Icon(Icons.access_time),
+                ],
+              ),
+              onTap: () async {
+                final TimeOfDay? selectedTime = await showTimePicker(
+                  context: context,
+                  initialTime: initialReminderTime != null
+                      ? TimeOfDay.fromDateTime(initialReminderTime!)
+                      : TimeOfDay.now(),
+                );
+
+                if (selectedTime != null) {
+                  final now = DateTime.now();
+                  final reminderTime = DateTime(
+                    now.year,
+                    now.month,
+                    now.day,
+                    selectedTime.hour,
+                    selectedTime.minute,
+                  );
+                  onReminderTimeChanged(reminderTime);
+                }
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
