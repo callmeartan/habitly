@@ -455,31 +455,26 @@ class _HabitDashboardState extends State<HabitDashboard> {
                   ),
                   const SizedBox(width: 8),
                   // Add Habit Button
-                  ElevatedButton.icon(
-                    onPressed: _showAddHabitDialog,
-                    icon: const Icon(Icons.add, size: 22),
-                    label: Text(
-                      'Add Habit',
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      // Use theme colors for button
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        ElevatedButton.icon(
+          onPressed: _showAddHabitDialog,
+          icon: Icon(
+            Icons.add,
+            size: 22,
+            color: Colors.black, // Contrast color for the "+"
+          ),
+          label: Text(
+            'Add Habit',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white, // Adjust background color for contrast
+          ),
+        ),
+
+     ] ),
               const SizedBox(height: 32),
               SizedBox(
                 height: 140,
