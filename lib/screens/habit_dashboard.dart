@@ -7,6 +7,11 @@ import '../widgets/habit_form.dart';
 import '../repositories/habit_repository.dart';
 import '../services/notification_service.dart';
 import 'dart:math' show max;
+import '../providers/theme_provider.dart';  // Add this line
+import 'package:provider/provider.dart';  // Add this line
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -365,6 +370,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (_isLoading) {
       return const Scaffold(
         body: Center(
@@ -408,28 +416,45 @@ class _HabitDashboardState extends State<HabitDashboard> {
             100);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      // Use theme background color instead of hardcoded Colors.grey[100]
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Row with App Title, Theme Toggle, and Add Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // App Title
                   Expanded(
                     child: Text(
                       'Habitly',
                       style: GoogleFonts.poppins(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        // Use theme color for text instead of hardcoded color
+                        color: colorScheme.onBackground,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  // Theme Toggle Button
+                  IconButton(
+                    icon: Icon(
+                      // Change icon based on current theme
+                      Provider.of<ThemeProvider>(context).isDarkMode
+                          ? Icons.light_mode  // Show sun icon in dark mode
+                          : Icons.dark_mode,  // Show moon icon in light mode
+                      color: colorScheme.onBackground,
+                    ),
+                    onPressed: () {
+                      // Toggle between light and dark theme
+                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();                    },
+                  ),
+                  const SizedBox(width: 8),
+                  // Add Habit Button
                   ElevatedButton.icon(
                     onPressed: _showAddHabitDialog,
                     icon: const Icon(Icons.add, size: 22),
@@ -441,8 +466,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[600],
-                      foregroundColor: Colors.white,
+                      // Use theme colors for button
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,

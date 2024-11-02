@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/habit.dart';
 
+// lib/widgets/habit_card.dart
+
 class HabitCard extends StatelessWidget {
   final Habit habit;
   final VoidCallback onEdit;
@@ -18,15 +20,18 @@ class HabitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: theme.shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -47,13 +52,14 @@ class HabitCard extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       habit.category,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -62,11 +68,19 @@ class HabitCard extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
+                    icon: Icon(
+                      Icons.edit,
+                      size: 20,
+                      color: colorScheme.onSurface.withOpacity(0.7),
+                    ),
                     onPressed: onEdit,
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete, size: 20, color: Colors.red[400]),
+                    icon: Icon(
+                      Icons.delete,
+                      size: 20,
+                      color: Colors.red[400],
+                    ),
                     onPressed: onDelete,
                   ),
                   TweenAnimationBuilder(
@@ -83,7 +97,7 @@ class HabitCard extends StatelessWidget {
                           icon: Icon(
                             Icons.check_circle,
                             color: Color.lerp(
-                              Colors.grey[300],
+                              colorScheme.onSurface.withOpacity(0.3),
                               Colors.green,
                               value,
                             ),
@@ -100,13 +114,17 @@ class HabitCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.emoji_events, size: 16, color: Colors.amber[400]),
+              Icon(
+                Icons.emoji_events,
+                size: 16,
+                color: Colors.amber[400],
+              ),
               const SizedBox(width: 4),
               Text(
                 'Streak: ${habit.streak} days',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const Spacer(),
@@ -114,7 +132,7 @@ class HabitCard extends StatelessWidget {
                 habit.frequency,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
             ],
@@ -128,8 +146,8 @@ class HabitCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: value,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                  backgroundColor: colorScheme.onSurface.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
                   minHeight: 8,
                 ),
               );

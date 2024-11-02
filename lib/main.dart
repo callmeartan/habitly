@@ -1,8 +1,20 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:habitly/screens/habit_dashboard.dart'; 
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:habitly/screens/habit_dashboard.dart';
+import 'package:habitly/providers/theme_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(prefs),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,12 +22,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'habitly',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HabitDashboard(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Habitly',
+          theme: themeProvider.theme,
+          home: const HabitDashboard(),
+        );
+      },
     );
   }
 }
