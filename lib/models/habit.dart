@@ -7,7 +7,7 @@ class Habit {
   bool completedToday;
   double progress;
   DateTime? reminderTime;
-  List<DateTime> completionDates; // New field
+  List<DateTime> completionDates; // Add this line
 
   Habit({
     required this.id,
@@ -19,7 +19,7 @@ class Habit {
     required this.progress,
     this.reminderTime,
     List<DateTime>? completionDates, // Add this parameter
-  }) : completionDates = completionDates ?? [];
+  }) : completionDates = completionDates ?? []; // Initialize empty list if null
 
   Habit copyWith({
     String? name,
@@ -29,7 +29,7 @@ class Habit {
     bool? completedToday,
     double? progress,
     DateTime? reminderTime,
-    List<DateTime>? completionDates,
+    List<DateTime>? completionDates, // Add this
   }) {
     return Habit(
       id: id,
@@ -40,7 +40,7 @@ class Habit {
       completedToday: completedToday ?? this.completedToday,
       progress: progress ?? this.progress,
       reminderTime: reminderTime ?? this.reminderTime,
-      completionDates: completionDates ?? this.completionDates,
+      completionDates: completionDates ?? this.completionDates, // Add this
     );
   }
 
@@ -53,7 +53,7 @@ class Habit {
     'completedToday': completedToday,
     'progress': progress,
     'reminderTime': reminderTime?.toIso8601String(),
-    'completionDates': completionDates.map((date) => date.toIso8601String()).toList(),
+    'completionDates': completionDates.map((date) => date.toIso8601String()).toList(), // Add this
   };
 
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
@@ -69,6 +69,6 @@ class Habit {
         : null,
     completionDates: (json['completionDates'] as List<dynamic>?)
         ?.map((dateStr) => DateTime.parse(dateStr))
-        .toList() ?? [],
+        .toList() ?? [], // Add this
   );
 }

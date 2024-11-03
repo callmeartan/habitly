@@ -90,24 +90,25 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
               outsideDaysVisible: false,
               weekendTextStyle: TextStyle(color: colorScheme.onSurface),
               holidayTextStyle: TextStyle(color: colorScheme.onSurface),
+              markersAnchor: 1.5,
             ),
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 final normalizedDate = DateTime(date.year, date.month, date.day);
                 if (_completionMap[normalizedDate] == true) {
-                  return Padding(
-                    padding: const EdgeInsets.all(1.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colorScheme.primary,
-                      ),
-                      width: 35,
-                      height: 35,
-                      child: Center(
-                        child: Text(
-                          date.day.toString(),
-                          style: TextStyle(color: colorScheme.onPrimary),
+                  return Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colorScheme.primary.withOpacity(0.8),
+                    ),
+                    width: 42,
+                    height: 42,
+                    child: Center(
+                      child: Text(
+                        date.day.toString(),
+                        style: TextStyle(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -117,99 +118,76 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
               },
             ),
           ),
-          const SizedBox(height: 20),
-          _buildStats(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStats() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    // Calculate statistics
-    final totalDays = widget.habit.completionDates.length;
-    final currentStreak = _calculateCurrentStreak();
-    final bestStreak = _calculateBestStreak();
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Statistics',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text(
+                      'Statistics',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatItem(
+                          'Current Streak',
+                          _calculateCurrentStreak().toString(),
+                          Icons.local_fire_department,
+                          Colors.orange,
+                        ),
+                        _buildStatItem(
+                          'Best Streak',
+                          _calculateBestStreak().toString(),
+                          Icons.emoji_events,
+                          Colors.amber,
+                        ),
+                        _buildStatItem(
+                          'Total Days',
+                          widget.habit.completionDates.length.toString(),
+                          Icons.calendar_today,
+                          Colors.blue,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatCard(
-                'Total Days',
-                totalDays.toString(),
-                Icons.calendar_today,
-                colorScheme,
-              ),
-              _buildStatCard(
-                'Current Streak',
-                currentStreak.toString(),
-                Icons.local_fire_department,
-                colorScheme,
-              ),
-              _buildStatCard(
-                'Best Streak',
-                bestStreak.toString(),
-                Icons.emoji_events,
-                colorScheme,
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: colorScheme.primary),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.primary,
-            ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: Colors.grey[600],
           ),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

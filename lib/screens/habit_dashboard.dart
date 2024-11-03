@@ -31,6 +31,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
     _loadHabits();
   }
 
+
   Future<void> _loadHabits() async {
     try {
       setState(() {
@@ -148,9 +149,30 @@ class _HabitDashboardState extends State<HabitDashboard> {
       final habitIndex = habits.indexWhere((h) => h.id == habitId);
       if (habitIndex != -1) {
         final habit = habits[habitIndex];
+        final isCompleting = !habit.completedToday;
+
+        // Get current date without time
+        final today = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        );
+
+        var updatedCompletionDates = List<DateTime>.from(habit.completionDates);
+        if (isCompleting) {
+          updatedCompletionDates.add(today);
+        } else {
+          updatedCompletionDates.removeWhere(
+                  (date) => date.year == today.year &&
+                  date.month == today.month &&
+                  date.day == today.day
+          );
+        }
+
         habits[habitIndex] = habit.copyWith(
-          completedToday: !habit.completedToday,
-          progress: !habit.completedToday ? 1.0 : 0.0,
+          completedToday: isCompleting,
+          progress: isCompleting ? 1.0 : 0.0,
+          completionDates: updatedCompletionDates,
         );
       }
     });
@@ -521,19 +543,19 @@ class _HabitDashboardState extends State<HabitDashboard> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     _buildStatCard(
-                      'Total Habits',
-                      habits.length.toString(),
-                      Icons.calendar_today,
-                    ),
-                    _buildStatCard(
-                      'Completed Today',
+                      'Completed',
                       completedToday.toString(),
                       Icons.check_circle_outline,
                     ),
                     _buildStatCard(
-                      'Average Progress',
+                      'Progress',
                       '${averageProgress.round()}%',
                       Icons.bar_chart,
+                    ),
+                    _buildStatCard(
+                      'Total Habits',
+                      habits.length.toString(),
+                      Icons.calendar_today,
                     ),
                   ],
                 ),
