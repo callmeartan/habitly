@@ -124,4 +124,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Artanahmadi@icloud.com
 
-Project Link: [https://github.com/your-username/habitly](https://github.com/callmeartan/habitly)
+Project Link: [https://github.com/callmeartan/habitly](https://github.com/callmeartan/habitly)
