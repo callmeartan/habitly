@@ -158,22 +158,36 @@ class _HabitDashboardState extends State<HabitDashboard> {
           DateTime.now().day,
         );
 
-        var updatedCompletionDates = List<DateTime>.from(habit.completionDates);
+        List<DateTime> updatedCompletionDates = List<DateTime>.from(habit.completionDates);
+
         if (isCompleting) {
-          updatedCompletionDates.add(today);
+          // Only add if the date isn't already in the list
+          if (!updatedCompletionDates.any((date) =>
+          date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day)) {
+            updatedCompletionDates.add(today);
+          }
         } else {
-          updatedCompletionDates.removeWhere(
-                  (date) => date.year == today.year &&
-                  date.month == today.month &&
-                  date.day == today.day
-          );
+          // Remove if exists
+          updatedCompletionDates.removeWhere((date) =>
+          date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day);
         }
+
+        // Calculate streak
+        final newStreak = isCompleting ? habit.streak + 1 : habit.streak - 1;
 
         habits[habitIndex] = habit.copyWith(
           completedToday: isCompleting,
           progress: isCompleting ? 1.0 : 0.0,
           completionDates: updatedCompletionDates,
+          streak: newStreak >= 0 ? newStreak : 0,
         );
+
+        // Debug print to verify dates
+        print('Completion dates for ${habit.name}: ${habits[habitIndex].completionDates}');
       }
     });
     await _habitRepository.saveHabits(habits);
