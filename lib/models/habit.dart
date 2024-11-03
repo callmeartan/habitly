@@ -6,7 +6,8 @@ class Habit {
   String frequency;
   bool completedToday;
   double progress;
-  DateTime? reminderTime;  // New field
+  DateTime? reminderTime;
+  List<DateTime> completionDates; // New field
 
   Habit({
     required this.id,
@@ -16,8 +17,9 @@ class Habit {
     required this.frequency,
     required this.completedToday,
     required this.progress,
-    this.reminderTime,  // Add this
-  });
+    this.reminderTime,
+    List<DateTime>? completionDates, // Add this parameter
+  }) : completionDates = completionDates ?? [];
 
   Habit copyWith({
     String? name,
@@ -26,7 +28,8 @@ class Habit {
     String? frequency,
     bool? completedToday,
     double? progress,
-    DateTime? reminderTime,  // Add this
+    DateTime? reminderTime,
+    List<DateTime>? completionDates,
   }) {
     return Habit(
       id: id,
@@ -36,7 +39,8 @@ class Habit {
       frequency: frequency ?? this.frequency,
       completedToday: completedToday ?? this.completedToday,
       progress: progress ?? this.progress,
-      reminderTime: reminderTime ?? this.reminderTime,  // Add this
+      reminderTime: reminderTime ?? this.reminderTime,
+      completionDates: completionDates ?? this.completionDates,
     );
   }
 
@@ -49,6 +53,7 @@ class Habit {
     'completedToday': completedToday,
     'progress': progress,
     'reminderTime': reminderTime?.toIso8601String(),
+    'completionDates': completionDates.map((date) => date.toIso8601String()).toList(),
   };
 
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
@@ -59,8 +64,11 @@ class Habit {
     frequency: json['frequency'],
     completedToday: json['completedToday'],
     progress: json['progress'],
-    reminderTime: json['reminderTime'] != null 
-      ? DateTime.parse(json['reminderTime']) 
-      : null,
+    reminderTime: json['reminderTime'] != null
+        ? DateTime.parse(json['reminderTime'])
+        : null,
+    completionDates: (json['completionDates'] as List<dynamic>?)
+        ?.map((dateStr) => DateTime.parse(dateStr))
+        .toList() ?? [],
   );
 }

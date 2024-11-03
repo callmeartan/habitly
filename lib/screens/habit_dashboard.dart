@@ -1,4 +1,3 @@
-// lib/screens/habit_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/habit.dart';
@@ -7,11 +6,9 @@ import '../widgets/habit_form.dart';
 import '../repositories/habit_repository.dart';
 import '../services/notification_service.dart';
 import 'dart:math' show max;
-import '../providers/theme_provider.dart';  // Add this line
-import 'package:provider/provider.dart';  // Add this line
-
+import '../providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -42,7 +39,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
       });
 
       final loadedHabits = await _habitRepository.loadHabits();
-      
+
       setState(() {
         habits = loadedHabits.isEmpty ? [
           Habit(
@@ -87,13 +84,63 @@ class _HabitDashboardState extends State<HabitDashboard> {
   }
 
   Future<void> _scheduleReminder(Habit habit) async {
-    if (habit.reminderTime != null) {
+    if (habit.reminderTime == null) {
+      return;
+    }
+
+    try {
+      await _notificationService.cancelReminder(habit.id);
+      final now = DateTime.now();
+
+      final scheduledTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        habit.reminderTime!.hour,
+        habit.reminderTime!.minute,
+      );
+
+      final finalScheduledTime = scheduledTime.isBefore(now)
+          ? scheduledTime.add(const Duration(days: 1))
+          : scheduledTime;
+
       await _notificationService.scheduleHabitReminder(
         id: habit.id,
         habitName: habit.name,
-        scheduledTime: habit.reminderTime!,
+        scheduledTime: finalScheduledTime,
       );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Reminder set for ${habit.name} at ${_formatTime(finalScheduledTime)}',
+              style: GoogleFonts.poppins(),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to set reminder: ${e.toString()}',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   void toggleHabitCompletion(int habitId) async {
@@ -156,7 +203,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
       );
     }
   }
-
   Future<void> _editHabit(Habit habit) async {
     final formKey = GlobalKey<FormState>();
     String name = habit.name;
@@ -208,7 +254,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
                     }
                   });
                   await _habitRepository.saveHabits(habits);
-                  
+
                   if (reminderTime != habit.reminderTime) {
                     if (habit.reminderTime != null) {
                       await _notificationService.cancelReminder(habit.id);
@@ -218,7 +264,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
                       await _scheduleReminder(habits[habitIndex]);
                     }
                   }
-                  
+
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Habit updated successfully')),
@@ -409,14 +455,13 @@ class _HabitDashboardState extends State<HabitDashboard> {
     final averageProgress = habits.isEmpty
         ? 0.0
         : (habits.fold<double>(
-            0,
-            (sum, habit) => sum + habit.progress,
-          ) /
-            habits.length *
-            100);
+      0,
+          (sum, habit) => sum + habit.progress,
+    ) /
+        habits.length *
+        100);
 
     return Scaffold(
-      // Use theme background color instead of hardcoded Colors.grey[100]
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
@@ -424,57 +469,51 @@ class _HabitDashboardState extends State<HabitDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row with App Title, Theme Toggle, and Add Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // App Title
                   Expanded(
                     child: Text(
                       'Habitly',
                       style: GoogleFonts.poppins(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        // Use theme color for text instead of hardcoded color
                         color: colorScheme.onBackground,
                       ),
                     ),
                   ),
-                  // Theme Toggle Button
                   IconButton(
                     icon: Icon(
-                      // Change icon based on current theme
                       Provider.of<ThemeProvider>(context).isDarkMode
-                          ? Icons.light_mode  // Show sun icon in dark mode
-                          : Icons.dark_mode,  // Show moon icon in light mode
+                          ? Icons.light_mode
+                          : Icons.dark_mode,
                       color: colorScheme.onBackground,
                     ),
                     onPressed: () {
-                      // Toggle between light and dark theme
-                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();                    },
+                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                    },
                   ),
                   const SizedBox(width: 8),
-                  // Add Habit Button
-        ElevatedButton.icon(
-          onPressed: _showAddHabitDialog,
-          icon: Icon(
-            Icons.add,
-            size: 22,
-            color: Colors.black, // Contrast color for the "+"
-          ),
-          label: Text(
-            'Add Habit',
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white, // Adjust background color for contrast
-          ),
-        ),
-
-     ] ),
+                  ElevatedButton.icon(
+                    onPressed: _showAddHabitDialog,
+                    icon: Icon(
+                      Icons.add,
+                      size: 22,
+                      color: Colors.black,
+                    ),
+                    label: Text(
+                      'Add Habit',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 32),
               SizedBox(
                 height: 140,
@@ -511,51 +550,51 @@ class _HabitDashboardState extends State<HabitDashboard> {
               const SizedBox(height: 20),
               Expanded(
                 child: habits.isEmpty
-                                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.emoji_events_outlined,
-                              size: 80,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'No habits yet',
-                              style: GoogleFonts.poppins(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Add a new habit to get started',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: habits.length,
-                        itemBuilder: (context, index) {
-                          final habit = habits[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: HabitCard(
-                              habit: habit,
-                              onEdit: () => _editHabit(habit),
-                              onDelete: () => _deleteHabit(habit.id),
-                              onToggleCompletion: () =>
-                                  toggleHabitCompletion(habit.id),
-                            ),
-                          );
-                        },
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
                       ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'No habits yet',
+                        style: GoogleFonts.poppins(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Add a new habit to get started',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
+                  itemCount: habits.length,
+                  itemBuilder: (context, index) {
+                    final habit = habits[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: HabitCard(
+                        habit: habit,
+                        onEdit: () => _editHabit(habit),
+                        onDelete: () => _deleteHabit(habit.id),
+                        onToggleCompletion: () =>
+                            toggleHabitCompletion(habit.id),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
