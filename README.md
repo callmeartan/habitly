@@ -1,32 +1,44 @@
 # Habitly - Flutter Habit Tracking App
 
-Habitly is a modern, feature-rich habit tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, reminders, and progress tracking.
+![Flutter Version](https://img.shields.io/badge/Flutter-3.x-blue.svg)
+![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg)
+[![GitHub stars](https://img.shields.io/github/stars/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/network)
 
-## Features
+Habitly is a modern, feature-rich habit tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, detailed progress tracking, and smart reminders.
+
+## ✨ Features
 
 ### Core Features
-- ✨ Create and manage daily, weekly, or monthly habits
+- 📱 Create and manage daily, weekly, or monthly habits
 - 📊 Track progress with visual indicators
-- 🔔 Custom reminders and notifications
+- 📅 Calendar view for habit completion tracking
+- 🔥 Streak tracking and statistics
+- 🔔 Smart reminders and notifications
 - 🌓 Dark and light theme support
-- 📈 Progress statistics and streaks
 - 🎯 Category-based habit organization
 
-### Technical Features
-- 💾 Local data persistence
-- 🔄 State management with Provider
-- 📱 Responsive design
-- 🎨 Custom animations
-- 📋 Form validation
-- 🔔 Local notifications
+### Calendar & Statistics
+- Visual calendar with completion markers
+- Current and best streak tracking
+- Total completion days
+- Progress statistics
+- Daily completion indicators
 
-## Getting Started
+### Smart Notifications
+- Custom reminder times per habit
+- Daily notification scheduling
+- Persistent notification preferences
+- Flexible reminder management
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Flutter (3.x or higher)
-- Dart (3.x or higher)
-- Android Studio / VS Code
-- iOS Simulator / Android Emulator
+- Flutter 3.x or higher
+- Dart 3.x or higher
+- iOS 12.0+ / Android 5.0+
+- Xcode for iOS development
+- Android Studio for Android development
 
 ### Installation
 
@@ -50,78 +62,76 @@ flutter pub get
 flutter run
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 lib/
 ├── models/
-│   └── habit.dart
+│   └── habit.dart          // Habit data model with completion tracking
 ├── screens/
-│   ├── habit_dashboard.dart
-│   └── habit_calendar_screen.dart
+│   ├── habit_dashboard.dart    // Main dashboard UI
+│   └── habit_calendar_screen.dart  // Calendar and statistics view
 ├── widgets/
-│   ├── habit_card.dart
-│   └── habit_form.dart
+│   ├── habit_card.dart     // Individual habit display
+│   └── habit_form.dart     // Habit creation/editing form
 ├── services/
-│   └── notification_service.dart
+│   └── notification_service.dart  // Local notifications handler
 ├── providers/
-│   └── theme_provider.dart
+│   └── theme_provider.dart    // Theme management
 ├── repositories/
-│   └── habit_repository.dart
+│   └── habit_repository.dart  // Data persistence
 └── main.dart
 ```
 
-## Dependencies
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  provider: ^[version]
-  shared_preferences: ^[version]
-  flutter_local_notifications: ^[version]
-  google_fonts: ^[version]
-  table_calendar: ^[version]
-  timezone: ^[version]
-```
-
-## Features in Detail
+## 🎯 Features in Detail
 
 ### Habit Management
-- Create new habits with customizable names and categories
+- Create habits with custom names and categories
 - Set frequency (daily, weekly, monthly)
 - Track completion with progress indicators
-- Delete or edit existing habits
+- Manage reminders for each habit
 
-### Reminder System
-- Set custom reminder times for each habit
-- Receive local notifications
-- Customize notification messages
-- Enable/disable reminders per habit
+### Calendar Tracking
+- Monthly calendar view
+- Visual completion indicators
+- Streak tracking
+- Statistical overview
+- Historical data viewing
 
 ### Theme Support
-- Toggle between light and dark themes
-- Persistent theme preference
-- Custom color schemes for both themes
+- Dynamic theme switching
+- Dark/Light mode
+- Persistent theme preferences
+- Custom color schemes
 
-### Progress Tracking
-- Visual progress indicators
-- Streak counting
-- Completion statistics
-- Category-based progress
+## 🛠 Technical Features
+- Local data persistence using SharedPreferences
+- State management with Provider
+- Responsive design
+- Custom animations
+- Form validation
+- Local notifications
+- Date handling and normalization
+- Streak calculations
 
+## 🤝 Contributing
 
-## License
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+## 📄 License
 
-## Acknowledgments
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- Flutter team for the amazing framework
-- All contributors who participate in this project
+## 📫 Contact
 
-## Contact
-
-Artanahmadi@icloud.com
+Artan - [GitHub Profile](https://github.com/callmeartan)
 
 Project Link: [https://github.com/callmeartan/habitly](https://github.com/callmeartan/habitly)
+
+## 🌟 Show your support
+
+Give a ⭐️ if this project helped you!
