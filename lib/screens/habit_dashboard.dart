@@ -1,14 +1,17 @@
+import 'dart:math' show max;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import '../models/habit.dart';
-import '../widgets/habit_card.dart';
-import '../widgets/habit_form.dart';
+import '../providers/theme_provider.dart';
 import '../repositories/habit_repository.dart';
 import '../services/notification_service.dart';
-import 'dart:math' show max;
-import '../providers/theme_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/habit_card.dart';
+import '../widgets/habit_form.dart';
+import '../widgets/stat_card.dart';
+import '../widgets/empty_habits.dart';
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -31,7 +34,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
     _loadHabits();
   }
 
-
   Future<void> _loadHabits() async {
     try {
       setState(() {
@@ -42,38 +44,40 @@ class _HabitDashboardState extends State<HabitDashboard> {
       final loadedHabits = await _habitRepository.loadHabits();
 
       setState(() {
-        habits = loadedHabits.isEmpty ? [
-          Habit(
-            id: 1,
-            name: 'Morning Meditation',
-            category: 'Health',
-            streak: 5,
-            frequency: 'daily',
-            completedToday: false,
-            progress: 0.85,
-            reminderTime: null,
-          ),
-          Habit(
-            id: 2,
-            name: 'Read 30 Minutes',
-            category: 'Personal Development',
-            streak: 12,
-            frequency: 'daily',
-            completedToday: true,
-            progress: 0.92,
-            reminderTime: null,
-          ),
-          Habit(
-            id: 3,
-            name: 'Weekly Exercise',
-            category: 'Health',
-            streak: 3,
-            frequency: 'weekly',
-            completedToday: false,
-            progress: 0.75,
-            reminderTime: null,
-          ),
-        ] : loadedHabits;
+        habits = loadedHabits.isEmpty
+            ? [
+                Habit(
+                  id: 1,
+                  name: 'Morning Meditation',
+                  category: 'Health',
+                  streak: 5,
+                  frequency: 'daily',
+                  completedToday: false,
+                  progress: 0.85,
+                  reminderTime: null,
+                ),
+                Habit(
+                  id: 2,
+                  name: 'Read 30 Minutes',
+                  category: 'Personal Development',
+                  streak: 12,
+                  frequency: 'daily',
+                  completedToday: true,
+                  progress: 0.92,
+                  reminderTime: null,
+                ),
+                Habit(
+                  id: 3,
+                  name: 'Weekly Exercise',
+                  category: 'Health',
+                  streak: 3,
+                  frequency: 'weekly',
+                  completedToday: false,
+                  progress: 0.75,
+                  reminderTime: null,
+                ),
+              ]
+            : loadedHabits;
         _isLoading = false;
       });
     } catch (e) {
@@ -158,12 +162,13 @@ class _HabitDashboardState extends State<HabitDashboard> {
           DateTime.now().day,
         );
 
-        List<DateTime> updatedCompletionDates = List<DateTime>.from(habit.completionDates);
+        List<DateTime> updatedCompletionDates =
+            List<DateTime>.from(habit.completionDates);
 
         if (isCompleting) {
           // Only add if the date isn't already in the list
           if (!updatedCompletionDates.any((date) =>
-          date.year == today.year &&
+              date.year == today.year &&
               date.month == today.month &&
               date.day == today.day)) {
             updatedCompletionDates.add(today);
@@ -171,7 +176,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
         } else {
           // Remove if exists
           updatedCompletionDates.removeWhere((date) =>
-          date.year == today.year &&
+              date.year == today.year &&
               date.month == today.month &&
               date.day == today.day);
         }
@@ -187,7 +192,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
         );
 
         // Debug print to verify dates
-        print('Completion dates for ${habit.name}: ${habits[habitIndex].completionDates}');
+        print(
+            'Completion dates for ${habit.name}: ${habits[habitIndex].completionDates}');
       }
     });
     await _habitRepository.saveHabits(habits);
@@ -239,6 +245,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
       );
     }
   }
+
   Future<void> _editHabit(Habit habit) async {
     final formKey = GlobalKey<FormState>();
     String name = habit.name;
@@ -279,7 +286,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   setState(() {
-                    final habitIndex = habits.indexWhere((h) => h.id == habit.id);
+                    final habitIndex =
+                        habits.indexWhere((h) => h.id == habit.id);
                     if (habitIndex != -1) {
                       habits[habitIndex] = habit.copyWith(
                         name: name,
@@ -296,7 +304,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
                       await _notificationService.cancelReminder(habit.id);
                     }
                     if (reminderTime != null) {
-                      final habitIndex = habits.indexWhere((h) => h.id == habit.id);
+                      final habitIndex =
+                          habits.indexWhere((h) => h.id == habit.id);
                       await _scheduleReminder(habits[habitIndex]);
                     }
                   }
@@ -361,7 +370,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final newHabit = Habit(
-                    id: habits.isEmpty ? 1 : habits.map((h) => h.id).reduce(max) + 1,
+                    id: habits.isEmpty
+                        ? 1
+                        : habits.map((h) => h.id).reduce(max) + 1,
                     name: name,
                     category: category,
                     streak: 0,
@@ -395,60 +406,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
-    return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Icon(
-                icon,
-                color: Colors.grey[600],
-                size: 24,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[700],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -491,11 +448,11 @@ class _HabitDashboardState extends State<HabitDashboard> {
     final averageProgress = habits.isEmpty
         ? 0.0
         : (habits.fold<double>(
-      0,
-          (sum, habit) => sum + habit.progress,
-    ) /
-        habits.length *
-        100);
+              0,
+              (sum, habit) => sum + habit.progress,
+            ) /
+            habits.length *
+            100);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -526,7 +483,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
                       color: colorScheme.onBackground,
                     ),
                     onPressed: () {
-                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                      Provider.of<ThemeProvider>(context, listen: false)
+                          .toggleTheme();
                     },
                   ),
                   const SizedBox(width: 8),
@@ -556,20 +514,20 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildStatCard(
-                      'Completed',
-                      completedToday.toString(),
-                      Icons.check_circle_outline,
+                    StatCard(
+                      title: 'Completed',
+                      value: completedToday.toString(),
+                      icon: Icons.check_circle_outline,
                     ),
-                    _buildStatCard(
-                      'Progress',
-                      '${averageProgress.round()}%',
-                      Icons.bar_chart,
+                    StatCard(
+                      title: 'Progress',
+                      value: '${averageProgress.round()}%',
+                      icon: Icons.bar_chart,
                     ),
-                    _buildStatCard(
-                      'Total Habits',
-                      habits.length.toString(),
-                      Icons.calendar_today,
+                    StatCard(
+                      title: 'Total Habits',
+                      value: habits.length.toString(),
+                      icon: Icons.calendar_today,
                     ),
                   ],
                 ),
@@ -580,57 +538,29 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+                  color: colorScheme.onBackground,
                 ),
               ),
               const SizedBox(height: 20),
               Expanded(
                 child: habits.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.emoji_events_outlined,
-                        size: 80,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'No habits yet',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Add a new habit to get started',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
+                    ? const EmptyHabits()
                     : ListView.builder(
-                  itemCount: habits.length,
-                  itemBuilder: (context, index) {
-                    final habit = habits[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: HabitCard(
-                        habit: habit,
-                        onEdit: () => _editHabit(habit),
-                        onDelete: () => _deleteHabit(habit.id),
-                        onToggleCompletion: () =>
-                            toggleHabitCompletion(habit.id),
+                        itemCount: habits.length,
+                        itemBuilder: (context, index) {
+                          final habit = habits[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: HabitCard(
+                              habit: habit,
+                              onEdit: () => _editHabit(habit),
+                              onDelete: () => _deleteHabit(habit.id),
+                              onToggleCompletion: () =>
+                                  toggleHabitCompletion(habit.id),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
