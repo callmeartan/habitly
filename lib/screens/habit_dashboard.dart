@@ -2,16 +2,16 @@ import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import '../models/habit.dart';
-import '../providers/theme_provider.dart';
 import '../repositories/habit_repository.dart';
 import '../services/notification_service.dart';
-import '../widgets/habit_card.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/dashboard_stats.dart';
+import '../widgets/error_view.dart';
 import '../widgets/habit_form.dart';
-import '../widgets/stat_card.dart';
-import '../widgets/empty_habits.dart';
+import '../widgets/habits_list.dart';
+import '../widgets/loading_indicator.dart';
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -89,9 +89,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
   }
 
   Future<void> _scheduleReminder(Habit habit) async {
-    if (habit.reminderTime == null) {
-      return;
-    }
+    if (habit.reminderTime == null) return;
 
     try {
       await _notificationService.cancelReminder(habit.id);
@@ -155,7 +153,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
         final habit = habits[habitIndex];
         final isCompleting = !habit.completedToday;
 
-        // Get current date without time
         final today = DateTime(
           DateTime.now().year,
           DateTime.now().month,
@@ -166,7 +163,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
             List<DateTime>.from(habit.completionDates);
 
         if (isCompleting) {
-          // Only add if the date isn't already in the list
           if (!updatedCompletionDates.any((date) =>
               date.year == today.year &&
               date.month == today.month &&
@@ -174,14 +170,12 @@ class _HabitDashboardState extends State<HabitDashboard> {
             updatedCompletionDates.add(today);
           }
         } else {
-          // Remove if exists
           updatedCompletionDates.removeWhere((date) =>
               date.year == today.year &&
               date.month == today.month &&
               date.day == today.day);
         }
 
-        // Calculate streak
         final newStreak = isCompleting ? habit.streak + 1 : habit.streak - 1;
 
         habits[habitIndex] = habit.copyWith(
@@ -190,10 +184,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
           completionDates: updatedCompletionDates,
           streak: newStreak >= 0 ? newStreak : 0,
         );
-
-        // Debug print to verify dates
-        print(
-            'Completion dates for ${habit.name}: ${habits[habitIndex].completionDates}');
       }
     });
     await _habitRepository.saveHabits(habits);
@@ -206,9 +196,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
         builder: (context) => AlertDialog(
           title: Text(
             'Delete Habit',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-            ),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
           content: const Text('Are you sure you want to delete this habit?'),
           actions: [
@@ -259,9 +247,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
         return AlertDialog(
           title: Text(
             'Edit Habit',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-            ),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
           content: HabitForm(
             initialName: name,
@@ -343,9 +329,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
         return AlertDialog(
           title: Text(
             'Add New Habit',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-            ),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
           ),
           content: HabitForm(
             initialName: name,
@@ -406,161 +390,40 @@ class _HabitDashboardState extends State<HabitDashboard> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const LoadingIndicator();
     }
 
     if (_error != null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Error: $_error',
-                style: GoogleFonts.poppins(color: Colors.red),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadHabits,
-                child: Text(
-                  'Retry',
-                  style: GoogleFonts.poppins(),
-                ),
-              ),
-            ],
-          ),
-        ),
+      return ErrorView(
+        error: _error!,
+        onRetry: _loadHabits,
       );
     }
 
-    final completedToday = habits.where((h) => h.completedToday).length;
-    final averageProgress = habits.isEmpty
-        ? 0.0
-        : (habits.fold<double>(
-              0,
-              (sum, habit) => sum + habit.progress,
-            ) /
-            habits.length *
-            100);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Habitly',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onBackground,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Provider.of<ThemeProvider>(context).isDarkMode
-                          ? Icons.light_mode
-                          : Icons.dark_mode,
-                      color: colorScheme.onBackground,
-                    ),
-                    onPressed: () {
-                      Provider.of<ThemeProvider>(context, listen: false)
-                          .toggleTheme();
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: _showAddHabitDialog,
-                    icon: Icon(
-                      Icons.add,
-                      size: 22,
-                      color: Colors.black,
-                    ),
-                    label: Text(
-                      'Add Habit',
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                    ),
-                  ),
-                ],
+              DashboardHeader(
+                onAddHabit: _showAddHabitDialog,
               ),
               const SizedBox(height: 32),
-              SizedBox(
-                height: 140,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    StatCard(
-                      title: 'Completed',
-                      value: completedToday.toString(),
-                      icon: Icons.check_circle_outline,
-                    ),
-                    StatCard(
-                      title: 'Progress',
-                      value: '${averageProgress.round()}%',
-                      icon: Icons.bar_chart,
-                    ),
-                    StatCard(
-                      title: 'Total Habits',
-                      value: habits.length.toString(),
-                      icon: Icons.calendar_today,
-                    ),
-                  ],
-                ),
-              ),
+              DashboardStats(habits: habits),
               const SizedBox(height: 32),
-              Text(
-                'Active Habits',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onBackground,
-                ),
-              ),
-              const SizedBox(height: 20),
               Expanded(
-                child: habits.isEmpty
-                    ? const EmptyHabits()
-                    : ListView.builder(
-                        itemCount: habits.length,
-                        itemBuilder: (context, index) {
-                          final habit = habits[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: HabitCard(
-                              habit: habit,
-                              onEdit: () => _editHabit(habit),
-                              onDelete: () => _deleteHabit(habit.id),
-                              onToggleCompletion: () =>
-                                  toggleHabitCompletion(habit.id),
-                            ),
-                          );
-                        },
-                      ),
+                child: HabitsList(
+                  habits: habits,
+                  onEdit: _editHabit,
+                  onDelete: _deleteHabit,
+                  onToggleCompletion: toggleHabitCompletion,
+                ),
               ),
             ],
           ),
