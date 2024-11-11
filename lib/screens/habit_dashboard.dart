@@ -1,4 +1,3 @@
-// lib/screens/habit_dashboard.dart
 import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
