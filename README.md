@@ -1,23 +1,9 @@
 # Habitly - Flutter Habit Tracking App
 
-![Flutter Version](https://img.shields.io/badge/Flutter-3.x-blue.svg)
-![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg)
-[![GitHub stars](https://img.shields.io/github/stars/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/network)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
-
-<p align="center">
-  <img src="https://via.placeholder.com/150" alt="Habitly Logo" width="150"/>
-</p>
 
 Habitly is a modern, feature-rich habit-tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, detailed progress tracking, and smart reminders.
 
-<p align="center">
-  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 1" width="200"/>
-  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 2" width="200"/>
-  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 3" width="200"/>
-</p>
+
 
 ## ✨ Features
 
@@ -148,14 +134,6 @@ lib/
 - JSON serialization
 - Date normalization
 - Streak calculations
-
-## 📱 App Preview
-
-| Feature | Screenshot |
-|---------|------------|
-| Dashboard | <img src="https://via.placeholder.com/150" width="150"/> |
-| Calendar View | <img src="https://via.placeholder.com/150" width="150"/> |
-| Statistics | <img src="https://via.placeholder.com/150" width="150"/> |
 
 ## 🔜 Roadmap
 
