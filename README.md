@@ -169,5 +169,5 @@ Project Link: [https://github.com/callmeartan/habitly](https://github.com/callme
 If you found this project helpful, please consider giving it a ⭐️!
 
 <p align="center">
-Made with ❤️ by <a href="https://github.com/callmeartan">Artan</a>
+Made by <a href="https://github.com/callmeartan">Artan</a>
 </p>
