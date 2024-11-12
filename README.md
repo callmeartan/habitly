@@ -4,8 +4,20 @@
 ![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg)
 [![GitHub stars](https://img.shields.io/github/stars/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/callmeartan/habitly.svg)](https://github.com/callmeartan/habitly/network)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 
-Habitly is a modern, feature-rich habit tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, detailed progress tracking, and smart reminders.
+<p align="center">
+  <img src="https://via.placeholder.com/150" alt="Habitly Logo" width="150"/>
+</p>
+
+Habitly is a modern, feature-rich habit-tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, detailed progress tracking, and smart reminders.
+
+<p align="center">
+  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 1" width="200"/>
+  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 2" width="200"/>
+  <img src="https://via.placeholder.com/200x400" alt="App Screenshot 3" width="200"/>
+</p>
 
 ## ✨ Features
 
@@ -30,6 +42,40 @@ Habitly is a modern, feature-rich habit tracking application built with Flutter.
 - Daily notification scheduling
 - Persistent notification preferences
 - Flexible reminder management
+
+## 🎯 Key Components
+
+### Models
+```dart
+// Example of Habit model structure
+class Habit {
+  final int id;
+  String name;
+  String category;
+  int streak;
+  String frequency;
+  bool completedToday;
+  double progress;
+  DateTime? reminderTime;
+  List<DateTime> completionDates;
+  
+  // ... methods for streak calculation and date handling
+}
+```
+
+### Services
+```dart
+// Example of Notification Service
+class NotificationService {
+  Future<void> scheduleHabitReminder({
+    required int id,
+    required String habitName,
+    required DateTime scheduledTime,
+  }) async {
+    // Implementation for scheduling notifications
+  }
+}
+```
 
 ## 🚀 Getting Started
 
@@ -83,38 +129,46 @@ lib/
 └── main.dart
 ```
 
-## 🎯 Features in Detail
-
-### Habit Management
-- Create habits with custom names and categories
-- Set frequency (daily, weekly, monthly)
-- Track completion with progress indicators
-- Manage reminders for each habit
-
-### Calendar Tracking
-- Monthly calendar view
-- Visual completion indicators
-- Streak tracking
-- Statistical overview
-- Historical data viewing
-
-### Theme Support
-- Dynamic theme switching
-- Dark/Light mode
-- Persistent theme preferences
-- Custom color schemes
-
 ## 🛠 Technical Features
-- Local data persistence using SharedPreferences
-- State management with Provider
-- Responsive design
+
+### State Management
+- Provider for state management
+- Efficient UI updates
+- Persistent storage
+
+### UI/UX
 - Custom animations
+- Responsive design
 - Form validation
-- Local notifications
-- Date handling and normalization
+- Interactive calendar
+- Progress indicators
+
+### Data Handling
+- Local persistence with SharedPreferences
+- JSON serialization
+- Date normalization
 - Streak calculations
 
+## 📱 App Preview
+
+| Feature | Screenshot |
+|---------|------------|
+| Dashboard | <img src="https://via.placeholder.com/150" width="150"/> |
+| Calendar View | <img src="https://via.placeholder.com/150" width="150"/> |
+| Statistics | <img src="https://via.placeholder.com/150" width="150"/> |
+
+## 🔜 Roadmap
+
+- [ ] Cloud synchronization
+- [ ] Social sharing features
+- [ ] Advanced Analytics
+- [ ] Widget support
+- [ ] Custom themes
+- [ ] Data export/import
+
 ## 🤝 Contributing
+
+Contributions make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -134,4 +188,8 @@ Project Link: [https://github.com/callmeartan/habitly](https://github.com/callme
 
 ## 🌟 Show your support
 
-Give a ⭐️ if this project helped you!
+If you found this project helpful, please consider giving it a ⭐️!
+
+<p align="center">
+Made with ❤️ by <a href="https://github.com/callmeartan">Artan</a>
+</p>
