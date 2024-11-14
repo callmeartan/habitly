@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1011838485758",
+    "project_id": "habitly-auth-test",
+    "storage_bucket": "habitly-auth-test.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011838485758:android:885efc58a1e0165d8f91af",
+        "android_client_info": {
+          "package_name": "com.artan.habitly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQYs8iHGczaKjl9Pgc0Xw0Nm7vYiiFMkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1011838485758:android:216c1b21fa8ec8ea8f91af",
+        "android_client_info": {
+          "package_name": "dev.artan.habitly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQYs8iHGczaKjl9Pgc0Xw0Nm7vYiiFMkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

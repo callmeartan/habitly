@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
+import 'package:habitly/services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -50,13 +51,6 @@ class LoginScreen extends StatelessWidget {
                 onTap: () => _handleAppleLogin(context),
                 text: 'Continue with Apple',
                 icon: Icons.apple,
-                context: context,
-              ),
-              const SizedBox(height: 16),
-              _buildLoginButton(
-                onTap: () => _handleGoogleLogin(context),
-                text: 'Continue with Google',
-                icon: Icons.g_mobiledata,
                 context: context,
               ),
               const SizedBox(height: 16),
@@ -182,8 +176,13 @@ class LoginScreen extends StatelessWidget {
       // Show loading indicator
       _showLoadingDialog(context);
 
-      // Implement Apple Sign In logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
+      final authService = AuthService();
+      final result = await authService.signInWithApple();
+
+      print("Successfully signed in with Apple. User: ${result.user?.email}");
+
+      if (!context.mounted) return;
+      Navigator.pop(context); // Dismiss loading
 
       // Navigate to dashboard
       Navigator.of(context).pushAndRemoveUntil(
@@ -191,27 +190,10 @@ class LoginScreen extends StatelessWidget {
             (route) => false,
       );
     } catch (e) {
+      print("Error during Apple sign in: $e");
+      if (!context.mounted) return;
       Navigator.pop(context); // Dismiss loading
-      _showErrorDialog(context, 'Apple Sign In failed. Please try again.');
-    }
-  }
-
-  void _handleGoogleLogin(BuildContext context) async {
-    try {
-      // Show loading indicator
-      _showLoadingDialog(context);
-
-      // Implement Google Sign In logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulated delay
-
-      // Navigate to dashboard
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HabitDashboard()),
-            (route) => false,
-      );
-    } catch (e) {
-      Navigator.pop(context); // Dismiss loading
-      _showErrorDialog(context, 'Google Sign In failed. Please try again.');
+      _showErrorDialog(context, 'Apple Sign In failed: ${e.toString()}');
     }
   }
 

@@ -4,18 +4,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
 import 'package:habitly/providers/theme_provider.dart';
 import 'package:habitly/screens/login_intro_screen.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:habitly/firebase_options.dart';  // Make sure this exists
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(prefs),
-      child: const MyApp(),
+  // Initialize both Firebase and SharedPreferences
+  await Future.wait([
+    Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     ),
-  );
+    SharedPreferences.getInstance(),
+  ]).then((results) {
+    final prefs = results[1] as SharedPreferences;
+    runApp(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(prefs),
+        child: const MyApp(),
+      ),
+    );
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -28,7 +37,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Habitly',
           theme: themeProvider.theme,
-          home: const LoginScreen(),        );
+          home: const LoginScreen(),
+        );
       },
     );
   }
