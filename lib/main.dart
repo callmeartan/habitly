@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
 import 'package:habitly/providers/theme_provider.dart';
+import 'package:habitly/screens/login_intro_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,8 +28,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Habitly',
           theme: themeProvider.theme,
-          home: const HabitDashboard(),
-        );
+          home: const LoginScreen(),        );
       },
     );
   }
