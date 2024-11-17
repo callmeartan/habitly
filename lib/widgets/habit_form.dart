@@ -56,12 +56,12 @@ class _HabitFormState extends State<HabitForm> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildNameInput(colorScheme),
-            const SizedBox(height: 24),
-            _buildCategorySection(colorScheme),
-            const SizedBox(height: 24),
-            _buildFrequencySection(colorScheme),
-            const SizedBox(height: 24),
-            _buildReminderSection(colorScheme),
+            const SizedBox(height: 32),
+            _buildCategoryChips(colorScheme),
+            const SizedBox(height: 32),
+            _buildFrequencyToggle(colorScheme),
+            const SizedBox(height: 32),
+            _buildReminderPicker(colorScheme),
           ],
         ),
       ),
@@ -69,65 +69,42 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   Widget _buildNameInput(ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'What habit do you want to build?',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
+    return TextFormField(
+      initialValue: widget.initialName,
+      style: GoogleFonts.poppins(
+        fontSize: 24,
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w300,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Name your habit...',
+        hintStyle: GoogleFonts.poppins(
+          color: colorScheme.onSurface.withOpacity(0.5),
+          fontSize: 24,
+          fontWeight: FontWeight.w300,
         ),
-        const SizedBox(height: 12),
-        TextFormField(
-          initialValue: widget.initialName,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: colorScheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            hintText: 'e.g., Morning Meditation',
-            hintStyle: GoogleFonts.poppins(
-                color: colorScheme.onSurface.withOpacity(0.5)),
-            filled: true,
-            fillColor: colorScheme.surface,
-            prefixIcon: Icon(Icons.edit_outlined,
-                color: colorScheme.onSurface.withOpacity(0.5)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: colorScheme.outline),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: colorScheme.outline),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: colorScheme.primary, width: 2),
-            ),
-            contentPadding: const EdgeInsets.all(16),
-          ),
-          validator: (value) {
-            if (value?.trim().isEmpty ?? true) {
-              return 'Please enter a habit name';
-            }
-            return null;
-          },
-          onChanged: widget.onNameChanged,
-        ),
-      ],
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
+      ),
+      validator: (value) {
+        if (value?.trim().isEmpty ?? true) {
+          return 'Please enter a habit name';
+        }
+        return null;
+      },
+      onChanged: widget.onNameChanged,
     );
   }
 
-  Widget _buildCategorySection(ColorScheme colorScheme) {
+  Widget _buildCategoryChips(ColorScheme colorScheme) {
     final categories = [
-      'Health',
-      'Personal Development',
-      'Work',
-      'Family',
-      'Other',
+      ('Health', Icons.favorite_outline),
+      ('Personal', Icons.psychology_outlined),
+      ('Work', Icons.work_outline),
+      ('Family', Icons.people_outline),
+      ('Other', Icons.category_outlined),
     ];
 
     return Column(
@@ -136,276 +113,194 @@ class _HabitFormState extends State<HabitForm> {
         Text(
           'Category',
           style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface.withOpacity(0.6),
+            letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colorScheme.outline),
-          ),
-          child: Column(
-            children: categories.map((category) {
-              final isSelected = currentCategory == category;
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      currentCategory = category;
-                    });
-                    widget.onCategoryChanged(category);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: category != categories.last
-                              ? colorScheme.outline
-                              : Colors.transparent,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _getCategoryIcon(category),
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            category,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: isSelected
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? FontWeight.w500
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(Icons.check_circle, color: colorScheme.primary),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFrequencySection(ColorScheme colorScheme) {
-    final frequencies = {
-      'daily': 'Every day',
-      'weekly': 'Every week',
-      'monthly': 'Every month',
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'How often?',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colorScheme.outline),
-          ),
-          child: Column(
-            children: frequencies.entries.map((entry) {
-              final isSelected = currentFrequency == entry.key;
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      currentFrequency = entry.key;
-                    });
-                    widget.onFrequencyChanged(entry.key);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: entry.key != frequencies.keys.last
-                              ? colorScheme.outline
-                              : Colors.transparent,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface.withOpacity(0.5),
-                              width: 2,
-                            ),
-                            color: isSelected
-                                ? colorScheme.primary
-                                : Colors.transparent,
-                          ),
-                          child: isSelected
-                              ? Icon(
-                            Icons.check,
-                            size: 12,
-                            color: colorScheme.onPrimary,
-                          )
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          entry.value,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.onSurface,
-                            fontWeight: isSelected
-                                ? FontWeight.w500
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReminderSection(ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Daily Reminder',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _showTimePickerSheet,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colorScheme.outline),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.access_time_rounded,
-                      color: colorScheme.primary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          currentReminderTime != null
-                              ? 'Reminder set for'
-                              : 'Set a reminder',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        if (currentReminderTime != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            _formatTime(currentReminderTime!),
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: colorScheme.onSurface.withOpacity(0.5),
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        if (currentReminderTime != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  currentReminderTime = null;
-                });
-                widget.onReminderTimeChanged(null);
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: categories.map((category) {
+            final isSelected = currentCategory == category.$1;
+            return InkWell(
+              onTap: () {
+                setState(() => currentCategory = category.$1);
+                widget.onCategoryChanged(category.$1);
               },
-              icon: Icon(
-                Icons.remove_circle_outline,
-                color: colorScheme.error,
-                size: 20,
-              ),
-              label: Text(
-                'Remove Reminder',
-                style: GoogleFonts.poppins(
-                  color: colorScheme.error,
-                  fontSize: 14,
+              borderRadius: BorderRadius.circular(24),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.outline.withOpacity(0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      category.$2,
+                      size: 18,
+                      color: isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      category.$1,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: isSelected
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurface.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFrequencyToggle(ColorScheme colorScheme) {
+    final frequencies = ['daily', 'weekly', 'monthly'];
+    final labels = ['Daily', 'Weekly', 'Monthly'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Frequency',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface.withOpacity(0.6),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: List.generate(frequencies.length, (index) {
+              final isSelected = currentFrequency == frequencies[index];
+              return Expanded(
+                child: InkWell(
+                  onTap: () {
+                    setState(() => currentFrequency = frequencies[index]);
+                    widget.onFrequencyChanged(frequencies[index]);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? colorScheme.primary : null,
+                      borderRadius: BorderRadius.horizontal(
+                        left: index == 0 ? const Radius.circular(12) : Radius.zero,
+                        right: index == frequencies.length - 1
+                            ? const Radius.circular(12)
+                            : Radius.zero,
+                      ),
+                    ),
+                    child: Text(
+                      labels[index],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: isSelected
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurface.withOpacity(0.8),
+                        fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReminderPicker(ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Reminder',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface.withOpacity(0.6),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: _showTimePickerSheet,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  color: currentReminderTime != null
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withOpacity(0.5),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    currentReminderTime != null
+                        ? _formatTime(currentReminderTime!)
+                        : 'Add reminder',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: currentReminderTime != null
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+                if (currentReminderTime != null)
+                  IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      size: 20,
+                      color: colorScheme.error,
+                    ),
+                    onPressed: () {
+                      setState(() => currentReminderTime = null);
+                      widget.onReminderTimeChanged(null);
+                    },
+                  ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
@@ -418,9 +313,7 @@ class _HabitFormState extends State<HabitForm> {
       builder: (context) => InteractiveTimePicker(
         initialTime: currentReminderTime,
         onTimeSelected: (DateTime? time) {
-          setState(() {
-            currentReminderTime = time;
-          });
+          setState(() => currentReminderTime = time);
           widget.onReminderTimeChanged(time);
         },
       ),
@@ -434,20 +327,5 @@ class _HabitFormState extends State<HabitForm> {
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final period = dateTime.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Health':
-        return Icons.favorite_outline;
-      case 'Personal Development':
-        return Icons.psychology_outlined;
-      case 'Work':
-        return Icons.work_outline;
-      case 'Family':
-        return Icons.people_outline;
-      default:
-        return Icons.category_outlined;
-    }
   }
 }
