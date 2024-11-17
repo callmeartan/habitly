@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
 import 'package:habitly/services/auth_service.dart';
+import '../widgets/custom_bottom_nav_bar.dart';
+import 'package:habitly/screens/main_navigation_scaffold.dart';
+
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -186,7 +189,7 @@ class LoginScreen extends StatelessWidget {
 
       // Navigate to dashboard
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HabitDashboard()),
+        MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
             (route) => false,
       );
     } catch (e) {
@@ -199,7 +202,7 @@ class LoginScreen extends StatelessWidget {
 
   void _handleOfflineMode(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const HabitDashboard()),
+      MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
           (route) => false,
     );
   }
