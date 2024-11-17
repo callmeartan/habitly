@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1011838485758:android:885efc58a1e0165d8f91af",
         "android_client_info": {
-          "package_name": "com.artan.habitly"
+          "package_name": "dev.artan.habitly"
         }
       },
       "oauth_client": [],
