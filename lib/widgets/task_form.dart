@@ -338,7 +338,7 @@ class _TaskFormState extends State<TaskForm> {
                       const SizedBox(width: 12),
                       Text(
                         currentDueDate != null
-                            ? DateFormat('MMM d, y').format(currentDueDate!)
+                            ? DateFormat('MMM d').format(currentDueDate!)
                             : 'Set date',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
