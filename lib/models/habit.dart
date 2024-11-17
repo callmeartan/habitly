@@ -1,4 +1,3 @@
-// lib/models/habit.dart
 class Habit {
   final int id;
   String name;
@@ -8,7 +7,7 @@ class Habit {
   bool completedToday;
   double progress;
   DateTime? reminderTime;
-  List<DateTime> completionDates;  // Add this field
+  List<DateTime> completionDates;
 
   Habit({
     required this.id,

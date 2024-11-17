@@ -8,16 +8,16 @@ class NotificationService {
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-        
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
     final DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
+    DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
@@ -38,12 +38,14 @@ class NotificationService {
   Future<void> scheduleHabitReminder({
     required int id,
     required String habitName,
-    required DateTime scheduledTime,
+    DateTime? scheduledTime,  // Make this parameter nullable
   }) async {
+    if (scheduledTime == null) return;  // Early return if no time is provided
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
-      'Habit Reminder',
-      'Time to complete your habit: $habitName',
+      'Reminder',
+      'Time to complete: $habitName',
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -62,7 +64,41 @@ class NotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> scheduleTaskReminder({
+    required int id,
+    required String taskTitle,
+    DateTime? scheduledTime,  // Make this parameter nullable
+  }) async {
+    if (scheduledTime == null) return;  // Early return if no time is provided
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      'Task Reminder',
+      'Due soon: $taskTitle',
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'task_reminders',
+          'Task Reminders',
+          channelDescription: 'Notifications for task reminders',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          sound: 'default.wav',
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }

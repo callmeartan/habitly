@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/habit.dart';
 import '../repositories/habit_repository.dart';
+import '../repositories/task_repository.dart';
 import '../services/notification_service.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_stats.dart';
@@ -12,6 +13,9 @@ import '../widgets/error_view.dart';
 import '../widgets/habit_form.dart';
 import '../widgets/habits_list.dart';
 import '../widgets/loading_indicator.dart';
+import '../widgets/task_form.dart';
+import '../models/task.dart';
+
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -22,6 +26,7 @@ class HabitDashboard extends StatefulWidget {
 
 class _HabitDashboardState extends State<HabitDashboard> {
   final _habitRepository = HabitRepository();
+  final _taskRepository = TaskRepository();
   final NotificationService _notificationService = NotificationService();
   List<Habit> habits = [];
   bool _isLoading = true;
@@ -316,6 +321,111 @@ class _HabitDashboardState extends State<HabitDashboard> {
     );
   }
 
+  Future<void> _showAddTaskDialog() async {
+    final formKey = GlobalKey<FormState>();
+    String title = '';
+    String description = '';
+    String category = 'Personal';
+    String priority = 'Medium';
+    DateTime? dueDate;
+    TimeOfDay? dueTime;
+    DateTime? reminder;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Add New Task',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          content: TaskForm(
+            initialTitle: title,
+            initialDescription: description,
+            initialCategory: category,
+            initialPriority: priority,
+            initialDueDate: dueDate,
+            initialDueTime: dueTime,
+            initialReminder: reminder,
+            onTitleChanged: (value) => title = value,
+            onDescriptionChanged: (value) => description = value,
+            onCategoryChanged: (value) => category = value ?? category,
+            onPriorityChanged: (value) => priority = value ?? priority,
+            onDueDateChanged: (value) => dueDate = value,
+            onDueTimeChanged: (value) => dueTime = value,
+            onReminderChanged: (value) => reminder = value,
+            formKey: formKey,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate() && dueDate != null) {
+                  try {
+                    final tasks = await _taskRepository.loadTasks();
+                    final newTaskId = tasks.isEmpty ? 1 : tasks.map((t) => t.id).reduce(max) + 1;
+
+                    final newTask = Task(
+                      id: newTaskId,
+                      title: title,
+                      description: description,
+                      category: category,
+                      priority: priority,
+                      dueDate: dueDate!,
+                      dueTime: dueTime,
+                      reminder: reminder,
+                    );
+
+                    await _taskRepository.addTask(newTask);
+
+                    if (reminder != null) {
+                      await _notificationService.scheduleTaskReminder(
+                        id: newTaskId + 10000,
+                        taskTitle: title,
+                        scheduledTime: reminder,
+                      );
+                    }
+
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Task added successfully')),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to add task: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } else if (dueDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please set a due date')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+              ),
+              child: Text(
+                'Add Task',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _showAddHabitDialog() async {
     final formKey = GlobalKey<FormState>();
     String name = '';
@@ -413,6 +523,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
             children: [
               DashboardHeader(
                 onAddHabit: _showAddHabitDialog,
+                onAddTask: _showAddTaskDialog,
               ),
               const SizedBox(height: 32),
               DashboardStats(habits: habits),
