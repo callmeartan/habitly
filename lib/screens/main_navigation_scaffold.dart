@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
 import 'package:habitly/screens/habit_calendar_screen.dart';
 import 'package:habitly/screens/tasks_screen.dart';
+import 'package:habitly/screens/habits_screen.dart';
+
 
 
 import '../widgets/custom_bottom_nav_bar.dart';
@@ -21,7 +23,7 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   // Keep track of navigation history for better state preservation
   final List<Widget> _screens = [
     const HabitDashboard(),
-    const Placeholder(), // Replace with HabitsScreen
+    const HabitsScreen(),
     const TasksScreen(),
     const Placeholder(), // Replace with ProfileScreen
   ];
