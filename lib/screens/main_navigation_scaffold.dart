@@ -8,7 +8,6 @@ import 'package:habitly/screens/habits_screen.dart';
 
 import '../widgets/custom_bottom_nav_bar.dart';
 
-// Import other screen files when you create them
 
 class MainNavigationScaffold extends StatefulWidget {
   const MainNavigationScaffold({Key? key}) : super(key: key);

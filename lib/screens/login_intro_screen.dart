@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
 import 'package:habitly/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'package:habitly/screens/main_navigation_scaffold.dart';
+
 
 
 class LoginScreen extends StatelessWidget {
@@ -179,6 +181,10 @@ class LoginScreen extends StatelessWidget {
       // Show loading indicator
       _showLoadingDialog(context);
 
+      // Clear offline mode preference
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('offline_mode', false);
+
       final authService = AuthService();
       final result = await authService.signInWithApple();
 
@@ -200,7 +206,12 @@ class LoginScreen extends StatelessWidget {
     }
   }
 
-  void _handleOfflineMode(BuildContext context) {
+  void _handleOfflineMode(BuildContext context) async {
+    // Save offline mode preference
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('offline_mode', true);
+
+    if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
           (route) => false,
