@@ -3,9 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/habit.dart';
 import '../repositories/habit_repository.dart';
-import 'habit_calendar_screen.dart';
 import '/widgets/habit_form.dart';
 import '../widgets/loading_indicator.dart';
+import '../widgets/habit_card.dart';
 import 'dart:math' show max;
 
 
@@ -338,17 +338,11 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       itemCount: habits.length,
       itemBuilder: (context, index) {
         final habit = habits[index];
-        return _HabitCard(
+        return HabitCard(
           habit: habit,
-          onToggleCompletion: () => _toggleHabitCompletion(habit.id),
           onEdit: () => _editHabit(habit),
           onDelete: () => _deleteHabit(habit.id),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HabitCalendarScreen(habit: habit),
-            ),
-          ),
+          onToggleCompletion: () => _toggleHabitCompletion(habit.id),
         );
       },
     );
