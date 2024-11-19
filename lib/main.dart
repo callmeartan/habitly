@@ -38,27 +38,19 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Habitly',
           theme: themeProvider.theme,
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              // Check if user is offline mode
-              if (snapshot.data == null) {
-                // Check shared preferences for offline mode flag
-                return FutureBuilder<SharedPreferences>(
-                  future: SharedPreferences.getInstance(),
-                  builder: (context, prefsSnapshot) {
-                    if (prefsSnapshot.hasData) {
-                      final isOfflineMode = prefsSnapshot.data!.getBool('offline_mode') ?? false;
-                      if (isOfflineMode) {
-                        return const MainNavigationScaffold();
-                      }
-                    }
-                    return const LoginScreen();
-                  },
-                );
+          home: FutureBuilder<SharedPreferences>(
+            future: SharedPreferences.getInstance(),
+            builder: (context, prefsSnapshot) {
+              if (prefsSnapshot.hasData) {
+                final isOfflineMode = prefsSnapshot.data!.getBool('offline_mode') ?? false;
+                if (isOfflineMode) {
+                  return const MainNavigationScaffold();
+                } else {
+                  return const LoginScreen();
+                }
+              } else {
+                return const LoginScreen();
               }
-              // User is logged in
-              return const MainNavigationScaffold();
             },
           ),
         );

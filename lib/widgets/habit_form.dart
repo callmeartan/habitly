@@ -102,6 +102,7 @@ class _HabitFormState extends State<HabitForm> {
     final categories = [
       ('Health', Icons.favorite_outline),
       ('Personal', Icons.psychology_outlined),
+      ('School', Icons.school_outlined),
       ('Work', Icons.work_outline),
       ('Family', Icons.people_outline),
       ('Other', Icons.category_outlined),
