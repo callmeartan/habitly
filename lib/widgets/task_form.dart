@@ -155,6 +155,7 @@ class _TaskFormState extends State<TaskForm> {
     final categories = [
       ('Personal', Icons.person_outline),
       ('Work', Icons.work_outline),
+      ('School', Icons.school_outlined),
       ('Shopping', Icons.shopping_bag_outlined),
       ('Health', Icons.favorite_outline),
       ('Other', Icons.category_outlined),

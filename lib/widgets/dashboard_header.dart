@@ -27,7 +27,7 @@ class DashboardHeader extends StatelessWidget {
           child: Text(
             'Habitly',
             style: GoogleFonts.poppins(
-              fontSize: 28,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
               color: colorScheme.onBackground,
             ),

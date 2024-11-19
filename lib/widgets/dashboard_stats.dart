@@ -23,7 +23,7 @@ class DashboardStats extends StatelessWidget {
         100);
 
     return SizedBox(
-      height: 140,
+      height: 110,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [

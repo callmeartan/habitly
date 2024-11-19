@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:habitly/screens/habit_dashboard.dart';
-import 'package:habitly/screens/habit_calendar_screen.dart';
-import 'package:habitly/screens/tasks_screen.dart';
 import 'package:habitly/screens/habits_screen.dart';
-
-
+import 'package:habitly/screens/tasks_screen.dart';
+import 'package:habitly/screens/profile_screen.dart';
 
 import '../widgets/custom_bottom_nav_bar.dart';
-
 
 class MainNavigationScaffold extends StatefulWidget {
   const MainNavigationScaffold({Key? key}) : super(key: key);
@@ -24,7 +21,7 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
     const HabitDashboard(),
     const HabitsScreen(),
     const TasksScreen(),
-    const Placeholder(), // Replace with ProfileScreen
+    const ProfileScreen(),
   ];
 
   void _onItemSelected(int index) {

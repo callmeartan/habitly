@@ -42,6 +42,7 @@ dependencies:
   firebase_core: ^3.8.0
   firebase_auth: ^5.3.3
   cloud_firestore: ^5.5.0
+  image_picker: ^1.1.2
 
 
 
@@ -57,7 +58,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "/Users/artan/Desktop/development/habitly/habitly-icon.png"
+  image_path: "/Users/artan/habitly/assets/app_icon.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -74,6 +75,8 @@ flutter:
   assets:
     - assets/apple_logo.png
     - assets/google_logo.png
+    - assets/app_icon.png
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

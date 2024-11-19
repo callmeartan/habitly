@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/habit.dart';
+import '../models/task.dart';
 import '../repositories/habit_repository.dart';
 import '../repositories/task_repository.dart';
 import '../services/notification_service.dart';
@@ -14,8 +15,6 @@ import '../widgets/habit_form.dart';
 import '../widgets/habits_list.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/task_form.dart';
-import '../models/task.dart';
-
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -369,7 +368,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 if (formKey.currentState!.validate() && dueDate != null) {
                   try {
                     final tasks = await _taskRepository.loadTasks();
-                    final newTaskId = tasks.isEmpty ? 1 : tasks.map((t) => t.id).reduce(max) + 1;
+                    final newTaskId = tasks.isEmpty
+                        ? 1
+                        : tasks.map((t) => t.id).reduce(max) + 1;
 
                     final newTask = Task(
                       id: newTaskId,

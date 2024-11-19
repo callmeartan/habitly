@@ -29,7 +29,7 @@ class Habit {
     bool? completedToday,
     double? progress,
     DateTime? reminderTime,
-    List<DateTime>? completionDates,  // Add this
+    List<DateTime>? completionDates,
   }) {
     return Habit(
       id: id,
@@ -40,7 +40,7 @@ class Habit {
       completedToday: completedToday ?? this.completedToday,
       progress: progress ?? this.progress,
       reminderTime: reminderTime ?? this.reminderTime,
-      completionDates: completionDates ?? this.completionDates,  // Add this
+      completionDates: completionDates ?? this.completionDates,
     );
   }
 
@@ -53,7 +53,7 @@ class Habit {
     'completedToday': completedToday,
     'progress': progress,
     'reminderTime': reminderTime?.toIso8601String(),
-    'completionDates': completionDates.map((date) => date.toIso8601String()).toList(),  // Add this
+    'completionDates': completionDates.map((date) => date.toIso8601String()).toList(),
   };
 
   factory Habit.fromJson(Map<String, dynamic> json) {

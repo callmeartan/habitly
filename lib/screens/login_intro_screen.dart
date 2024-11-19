@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:habitly/screens/habit_dashboard.dart';
+import 'package:habitly/screens/main_navigation_scaffold.dart';
 import 'package:habitly/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../widgets/custom_bottom_nav_bar.dart';
-import 'package:habitly/screens/main_navigation_scaffold.dart';
-
-
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -23,18 +19,10 @@ class LoginScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 1),
               // Hero Section
-              Center(
-                child: Icon(
-                  Icons.track_changes_rounded,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 24),
               Text(
-                'Build Better Habits',
+                'Habitly',
                 style: GoogleFonts.poppins(
-                  fontSize: 32,
+                  fontSize: 40,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -42,9 +30,19 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Join thousands of people who use Habitly to transform their lives, one habit at a time.',
+                'Get it done. Build the habit.',
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Join thousands of people who use Habitly to transform their lives, one habit at a time.",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
                   color: Colors.grey[400],
                   height: 1.5,
                 ),
@@ -191,12 +189,11 @@ class LoginScreen extends StatelessWidget {
       print("Successfully signed in with Apple. User: ${result.user?.email}");
 
       if (!context.mounted) return;
-      Navigator.pop(context); // Dismiss loading
+      Navigator.pop(context);
 
-      // Navigate to dashboard
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
-            (route) => false,
+        (route) => false,
       );
     } catch (e) {
       print("Error during Apple sign in: $e");
@@ -214,7 +211,7 @@ class LoginScreen extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
-          (route) => false,
+      (route) => false,
     );
   }
 
