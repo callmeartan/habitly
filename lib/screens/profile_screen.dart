@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:habitly/services/auth_service.dart';
 import 'package:habitly/screens/login_intro_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:habitly/providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -20,8 +22,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _imagePath;
   bool _isOfflineMode = true;
   String _userName = 'Guest User';
-  final bool _notificationsEnabled = true;
-  final bool _darkModeEnabled = false;
+  bool _notificationsEnabled = false;
+  bool _darkModeEnabled = false;
 
   @override
   void initState() {
@@ -48,6 +50,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isOfflineMode = prefs.getBool('offline_mode') ?? true;
       _imagePath = prefs.getString('profile_image');
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+      _darkModeEnabled = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
 
       if (!_isOfflineMode && user != null) {
         // First try to get the display name
@@ -61,10 +65,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               .map((word) => word[0].toUpperCase() + word.substring(1))  // Capitalize each word
               .join(' ');
         } else {
-          _userName = 'Guest User';  // Fallback if no name or email is available
+          _userName = prefs.getString('user_name') ?? 'Guest User';
         }
       } else {
-        _userName = 'Guest User';
+        _userName = prefs.getString('user_name') ?? 'Guest User';
       }
     });
   }
@@ -79,10 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             (route) => false,
       );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign out: $e')),
-      );
+      // Just handle the error silently
     }
   }
 
@@ -108,6 +109,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
       debugPrint('Error picking image: $e');
     }
   }
+
+  Future<void> _toggleNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = value;
+    });
+    await prefs.setBool('notifications_enabled', value);
+  }
+
+  Future<void> _toggleDarkMode(bool value) async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    setState(() {
+      _darkModeEnabled = value;
+    });
+    themeProvider.toggleTheme();
+  }
+
+  Future<void> _editProfile() async {
+    final TextEditingController nameController = TextEditingController(text: _userName);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Edit Profile',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Name',
+                labelStyle: GoogleFonts.poppins(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty) {
+                setState(() {
+                  _userName = nameController.text;
+                });
+
+                // Save to SharedPreferences
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('user_name', nameController.text);
+
+                // Update Firebase display name if user is logged in
+                if (_currentUser != null) {
+                  await _currentUser!.updateDisplayName(nameController.text);
+                }
+
+                if (!mounted) return;
+                Navigator.pop(context);
+              }
+            },
+            child: Text(
+              'Save',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -145,9 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icons.edit,
                             color: colorScheme.primary,
                           ),
-                          onPressed: () {
-                            // TODO: Implement edit profile
-                          },
+                          onPressed: _editProfile,
                         ),
                       ],
                     ),
@@ -213,37 +289,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
-              // Stats Section
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard(
-                      icon: Icons.task_alt,
-                      value: '24',
-                      label: 'Tasks\nCompleted',
-                      color: Colors.green,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildStatCard(
-                      icon: Icons.local_fire_department,
-                      value: '7',
-                      label: 'Current\nStreak',
-                      color: Colors.orange,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildStatCard(
-                      icon: Icons.emoji_events,
-                      value: '15',
-                      label: 'Best\nStreak',
-                      color: Colors.amber,
-                      colorScheme: colorScheme,
-                    ),
-                  ],
-                ),
-              ),
-
               // Settings Section
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -265,9 +310,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       subtitle: 'Enable push notifications',
                       trailing: Switch(
                         value: _notificationsEnabled,
-                        onChanged: (value) {
-                          // TODO: Implement notifications toggle
-                        },
+                        onChanged: _toggleNotifications,
+                      ),
+                      colorScheme: colorScheme,
+                    ),
+                    _buildSettingsTile(
+                      icon: Icons.dark_mode,
+                      title: 'Dark Mode',
+                      subtitle: 'Toggle dark theme',
+                      trailing: Switch(
+                        value: _darkModeEnabled,
+                        onChanged: _toggleDarkMode,
                       ),
                       colorScheme: colorScheme,
                     ),
@@ -281,6 +334,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: colorScheme.onBackground.withOpacity(0.5),
                       ),
                       colorScheme: colorScheme,
+                      onTap: () async {
+                        // Show "Coming Soon" message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Cloud backup coming soon!')),
+                        );
+                      },
                     ),
                     _buildSettingsTile(
                       icon: Icons.security,
@@ -334,56 +393,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-    required ColorScheme colorScheme,
-  }) {
-    return Container(
-      width: 105,
-      height: 140,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: colorScheme.onSurface.withOpacity(0.7),
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
       ),
     );
   }
