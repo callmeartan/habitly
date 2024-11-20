@@ -267,9 +267,16 @@ class _HabitDashboardState extends State<HabitDashboard> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(44, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
               child: Text(
                 'Cancel',
-                style: GoogleFonts.poppins(color: Colors.grey),
+                style: GoogleFonts.poppins(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
               ),
             ),
             ElevatedButton(
@@ -308,6 +315,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[600],
+                minimumSize: const Size(44, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               child: Text(
                 'Save Changes',
@@ -518,7 +527,10 @@ class _HabitDashboardState extends State<HabitDashboard> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+            vertical: 16.0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -526,9 +538,9 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 onAddHabit: _showAddHabitDialog,
                 onAddTask: _showAddTaskDialog,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               DashboardStats(habits: habits),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               Expanded(
                 child: HabitsList(
                   habits: habits,

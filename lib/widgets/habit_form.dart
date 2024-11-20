@@ -72,7 +72,7 @@ class _HabitFormState extends State<HabitForm> {
     return TextFormField(
       initialValue: widget.initialName,
       style: GoogleFonts.poppins(
-        fontSize: 24,
+        fontSize: 16,
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w300,
       ),
@@ -80,7 +80,7 @@ class _HabitFormState extends State<HabitForm> {
         hintText: 'Name your habit...',
         hintStyle: GoogleFonts.poppins(
           color: colorScheme.onSurface.withOpacity(0.5),
-          fontSize: 24,
+          fontSize: 16,
           fontWeight: FontWeight.w300,
         ),
         border: InputBorder.none,
@@ -114,7 +114,7 @@ class _HabitFormState extends State<HabitForm> {
         Text(
           'Category',
           style: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
             color: colorScheme.onSurface.withOpacity(0.6),
             letterSpacing: 0.5,
@@ -134,7 +134,7 @@ class _HabitFormState extends State<HabitForm> {
               borderRadius: BorderRadius.circular(24),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? colorScheme.primary
@@ -186,7 +186,7 @@ class _HabitFormState extends State<HabitForm> {
         Text(
           'Frequency',
           style: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
             color: colorScheme.onSurface.withOpacity(0.6),
             letterSpacing: 0.5,
@@ -194,6 +194,7 @@ class _HabitFormState extends State<HabitForm> {
         ),
         const SizedBox(height: 16),
         Container(
+          height: 44,
           decoration: BoxDecoration(
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
@@ -247,7 +248,7 @@ class _HabitFormState extends State<HabitForm> {
         Text(
           'Reminder',
           style: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
             color: colorScheme.onSurface.withOpacity(0.6),
             letterSpacing: 0.5,
@@ -258,7 +259,8 @@ class _HabitFormState extends State<HabitForm> {
           onTap: _showTimePickerSheet,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            height: 44,
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
