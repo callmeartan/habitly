@@ -7,6 +7,7 @@ import 'package:habitly/screens/login_intro_screen.dart';
 import 'package:habitly/firebase_options.dart';
 import 'package:habitly/screens/main_navigation_scaffold.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

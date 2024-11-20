@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:habitly/services/auth_service.dart';
+import 'package:habitly/screens/login_intro_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -12,6 +15,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthService _authService = AuthService();
+  User? _currentUser;
   String? _imagePath;
   bool _isOfflineMode = true;
   String _userName = 'Guest User';
@@ -22,18 +27,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+    _setupAuthListener();
+  }
+
+  void _setupAuthListener() {
+    _authService.authStateChanges.listen((User? user) {
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _loadUserData(); // Reload user data when auth state changes
+        });
+      }
+    });
   }
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final user = _authService.currentUser;
+
     setState(() {
       _isOfflineMode = prefs.getBool('offline_mode') ?? true;
       _imagePath = prefs.getString('profile_image');
-      if (!_isOfflineMode) {
-        // In a real app, you'd fetch the user's name from Firebase Auth
-        _userName = 'John Doe'; // Placeholder for Apple Sign In name
+
+      if (!_isOfflineMode && user != null) {
+        // First try to get the display name
+        if (user.displayName != null && user.displayName!.isNotEmpty) {
+          _userName = user.displayName!;
+        }
+        // If no display name, try to get the email
+        else if (user.email != null && user.email!.isNotEmpty) {
+          _userName = user.email!.split('@')[0]  // Get the part before @
+              .split('.')  // Split by dots
+              .map((word) => word[0].toUpperCase() + word.substring(1))  // Capitalize each word
+              .join(' ');
+        } else {
+          _userName = 'Guest User';  // Fallback if no name or email is available
+        }
+      } else {
+        _userName = 'Guest User';
       }
     });
+  }
+
+  Future<void> _handleSignOut() async {
+    try {
+      await _authService.signOut();
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign out: $e')),
+      );
+    }
   }
 
   Future<void> _pickImage() async {
@@ -41,9 +91,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 512, // Limit image size
+        maxWidth: 512,
         maxHeight: 512,
-        imageQuality: 85, // Compress image
+        imageQuality: 85,
       );
 
       if (image != null) {
@@ -51,7 +101,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _imagePath = image.path;
         });
 
-        // Save the image path to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('profile_image', image.path);
       }
@@ -59,7 +108,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       debugPrint('Error picking image: $e');
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -70,7 +118,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Header Section
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -248,7 +295,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _buildSettingsTile(
                       icon: Icons.help_outline,
-                      title:                       'Feedback',
+                      title: 'Feedback',
                       subtitle: 'Help us improve Habitly',
                       trailing: Icon(
                         Icons.arrow_forward_ios,
@@ -265,9 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Implement sign out
-                  },
+                  onPressed: _handleSignOut,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.error,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -349,6 +394,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required Widget trailing,
     required ColorScheme colorScheme,
+    VoidCallback? onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -390,9 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         trailing: trailing,
-        onTap: () {
-          // TODO: Implement settings actions
-        },
+        onTap: onTap,
       ),
     );
   }
