@@ -93,7 +93,7 @@ class _TaskFormState extends State<TaskForm> {
     return TextFormField(
       initialValue: widget.initialTitle,
       style: GoogleFonts.poppins(
-        fontSize: 24,
+        fontSize: 28,
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w300,
       ),
@@ -101,7 +101,7 @@ class _TaskFormState extends State<TaskForm> {
         hintText: 'Task title...',
         hintStyle: GoogleFonts.poppins(
           color: colorScheme.onSurface.withOpacity(0.5),
-          fontSize: 24,
+          fontSize: 28,
           fontWeight: FontWeight.w300,
         ),
         border: InputBorder.none,
@@ -124,6 +124,7 @@ class _TaskFormState extends State<TaskForm> {
       initialValue: widget.initialDescription,
       style: GoogleFonts.poppins(
         fontSize: 16,
+        height: 1.5,
         color: colorScheme.onSurface,
       ),
       maxLines: 3,
@@ -175,8 +176,8 @@ class _TaskFormState extends State<TaskForm> {
         ),
         const SizedBox(height: 16),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 16,
+          runSpacing: 16,
           children: categories.map((category) {
             final isSelected = currentCategory == category.$1;
             return InkWell(
@@ -187,7 +188,8 @@ class _TaskFormState extends State<TaskForm> {
               borderRadius: BorderRadius.circular(24),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                height: 48,
                 decoration: BoxDecoration(
                   color: isSelected ? colorScheme.primary : colorScheme.surface,
                   borderRadius: BorderRadius.circular(24),
@@ -321,7 +323,8 @@ class _TaskFormState extends State<TaskForm> {
                 onTap: () => _showDatePicker(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  height: 56,
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
@@ -359,7 +362,8 @@ class _TaskFormState extends State<TaskForm> {
                 onTap: () => _showTimePicker(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  height: 56,
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
@@ -401,65 +405,65 @@ class _TaskFormState extends State<TaskForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-      Text(
-      'Reminder',
-      style: GoogleFonts.poppins(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: colorScheme.onSurface.withOpacity(0.6),
-        letterSpacing: 0.5,
-      ),
-    ),
-    const SizedBox(height: 16),
-    InkWell(
-    onTap: () => _showReminderPicker(context),
-    borderRadius: BorderRadius.circular(12),
-    child: Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-    color: colorScheme.surface,
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
-    ),
-    child: Row(
-    children: [
-    Icon(
-    Icons.notifications_outlined,
-    size: 20,
-    color: currentReminder != null
-    ? colorScheme.primary
-        : colorScheme.onSurface.withOpacity(0.5),
-    ),
-    const SizedBox(width: 12),
-    Expanded(
-    child: Text(
-    currentReminder != null
-    ? DateFormat('MMM d, y • h:mm a').format(currentReminder!)
-        : 'Add reminder',
-    style: GoogleFonts.poppins(
-    fontSize: 14,
-    color: currentReminder != null
-    ? colorScheme.onSurface
-        : colorScheme.onSurface.withOpacity(0.5),
-    ),
-    ),
-    ),
-    if (currentReminder != null)
-    IconButton(
-    icon: Icon(
-      Icons.close,
-      size: 20,
-      color: colorScheme.error,
-    ),
-      onPressed: () {
-        setState(() => currentReminder = null);
-        widget.onReminderChanged(null);
-      },
-    ),
-    ],
-    ),
-    ),
-    ),
+        Text(
+          'Reminder',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurface.withOpacity(0.6),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: () => _showReminderPicker(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.notifications_outlined,
+                  size: 20,
+                  color: currentReminder != null
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withOpacity(0.5),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    currentReminder != null
+                        ? DateFormat('MMM d, y • h:mm a').format(currentReminder!)
+                        : 'Add reminder',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: currentReminder != null
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+                if (currentReminder != null)
+                  IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      size: 20,
+                      color: colorScheme.error,
+                    ),
+                    onPressed: () {
+                      setState(() => currentReminder = null);
+                      widget.onReminderChanged(null);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
