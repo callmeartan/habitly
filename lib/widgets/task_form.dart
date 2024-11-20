@@ -176,8 +176,8 @@ class _TaskFormState extends State<TaskForm> {
         ),
         const SizedBox(height: 16),
         Wrap(
-          spacing: 16,
-          runSpacing: 16,
+          spacing: 12,
+          runSpacing: 12,
           children: categories.map((category) {
             final isSelected = currentCategory == category.$1;
             return InkWell(
@@ -188,8 +188,9 @@ class _TaskFormState extends State<TaskForm> {
               borderRadius: BorderRadius.circular(24),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 height: 48,
+                constraints: const BoxConstraints(minWidth: 100),
                 decoration: BoxDecoration(
                   color: isSelected ? colorScheme.primary : colorScheme.surface,
                   borderRadius: BorderRadius.circular(24),

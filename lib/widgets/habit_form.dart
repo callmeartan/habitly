@@ -134,7 +134,9 @@ class _HabitFormState extends State<HabitForm> {
               borderRadius: BorderRadius.circular(24),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 48,
+                constraints: const BoxConstraints(minWidth: 100),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? colorScheme.primary
