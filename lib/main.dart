@@ -6,7 +6,8 @@ import 'package:habitly/providers/theme_provider.dart';
 import 'package:habitly/screens/login_intro_screen.dart';
 import 'package:habitly/firebase_options.dart';
 import 'package:habitly/screens/main_navigation_scaffold.dart';
-
+import 'package:habitly/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,16 +42,24 @@ class MyApp extends StatelessWidget {
           home: FutureBuilder<SharedPreferences>(
             future: SharedPreferences.getInstance(),
             builder: (context, prefsSnapshot) {
-              if (prefsSnapshot.hasData) {
-                final isOfflineMode = prefsSnapshot.data!.getBool('offline_mode') ?? false;
-                if (isOfflineMode) {
-                  return const MainNavigationScaffold();
-                } else {
-                  return const LoginScreen();
-                }
-              } else {
-                return const LoginScreen();
+              if (!prefsSnapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
               }
+
+              return StreamBuilder<User?>(
+                stream: AuthService().authStateChanges,
+                builder: (context, authSnapshot) {
+                  final isOfflineMode = prefsSnapshot.data!.getBool('offline_mode') ?? false;
+
+                  // User is either in offline mode or authenticated
+                  if (isOfflineMode || authSnapshot.hasData) {
+                    return const MainNavigationScaffold();
+                  }
+
+                  // User is neither in offline mode nor authenticated
+                  return const LoginScreen();
+                },
+              );
             },
           ),
         );

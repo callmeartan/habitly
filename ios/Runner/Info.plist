@@ -4,6 +4,12 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+        <string>We need access to your photos so you can select a profile picture.</string>
+        <key>NSCameraUsageDescription</key>
+        <string>We need access to your camera so you can take a profile picture.</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>We need access to your microphone when you record videos with sound.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

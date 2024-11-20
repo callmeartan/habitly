@@ -1163,12 +1163,19 @@ PODS:
   - Firebase/Firestore (11.4.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 11.4.0)
+  - Firebase/Storage (11.4.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 11.4.0)
   - firebase_auth (5.3.3):
     - Firebase/Auth (= 11.4.0)
     - firebase_core
     - Flutter
   - firebase_core (3.8.0):
     - Firebase/CoreOnly (= 11.4.0)
+    - Flutter
+  - firebase_storage (12.3.6):
+    - Firebase/Storage (= 11.4.0)
+    - firebase_core
     - Flutter
   - FirebaseAppCheckInterop (11.5.0)
   - FirebaseAuth (11.4.0):
@@ -1210,6 +1217,13 @@ PODS:
     - leveldb-library (~> 1.22)
     - nanopb (~> 3.30910.0)
   - FirebaseSharedSwift (11.5.0)
+  - FirebaseStorage (11.4.0):
+    - FirebaseAppCheckInterop (~> 11.0)
+    - FirebaseAuthInterop (~> 11.0)
+    - FirebaseCore (~> 11.4)
+    - FirebaseCoreExtension (~> 11.4)
+    - GoogleUtilities/Environment (~> 8.0)
+    - GTMSessionFetcher/Core (< 5.0, >= 3.4)
   - Flutter (1.0.0)
   - flutter_local_notifications (0.0.1):
     - Flutter
@@ -1347,6 +1361,7 @@ DEPENDENCIES:
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
+  - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
@@ -1368,6 +1383,7 @@ SPEC REPOS:
     - FirebaseFirestore
     - FirebaseFirestoreInternal
     - FirebaseSharedSwift
+    - FirebaseStorage
     - GoogleUtilities
     - "gRPC-C++"
     - gRPC-Core
@@ -1383,6 +1399,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
+  firebase_storage:
+    :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
   flutter_local_notifications:
@@ -1403,6 +1421,7 @@ SPEC CHECKSUMS:
   Firebase: cf1b19f21410b029b6786a54e9764a0cacad3c99
   firebase_auth: 42718683069d35d73af7a986b55b194589039e5e
   firebase_core: 9efc3ecf689cdbc90f13f4dc58108c83ea46b266
+  firebase_storage: 942caaa628c22c941bff8af058347cc5c38a70bf
   FirebaseAppCheckInterop: d265d9f4484e7ec1c591086408840fdd383d1213
   FirebaseAuth: c359af98bd703cbf4293eec107a40de08ede6ce6
   FirebaseAuthInterop: 1219bee9b23e6ebe84c256a0d95adab53d11c331
@@ -1412,6 +1431,7 @@ SPEC CHECKSUMS:
   FirebaseFirestore: 2ccdf893fd7e175aa8ec58faa06338b346d27db8
   FirebaseFirestoreInternal: 004452c4669d5df8869c9f8f7a24ee0009852d5b
   FirebaseSharedSwift: 302ac5967857ad7e7388b15382d705b8c8d892aa
+  FirebaseStorage: 1bf8f80ac3bb02c72844b7350e95e10be7113ef0
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_local_notifications: 4cde75091f6327eb8517fa068a0a5950212d2086
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
@@ -1426,6 +1446,6 @@ SPEC CHECKSUMS:
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
   sign_in_with_apple: f3bf75217ea4c2c8b91823f225d70230119b8440
 
-PODFILE CHECKSUM: ccdb5bb5e2961d49b7b17f1ad7426d4a18f2a0ee
+PODFILE CHECKSUM: 4be7aef099d23fa8253b7dbf9e41c1a2ce9c5ff3
 
 COCOAPODS: 1.16.2
