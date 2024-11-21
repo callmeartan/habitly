@@ -1,103 +1,179 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class DashboardHeader extends StatelessWidget {
-  final VoidCallback onAddHabit;
-  final VoidCallback onAddTask;
+class DashboardHeader extends StatefulWidget {
+  const DashboardHeader({Key? key}) : super(key: key);
 
-  const DashboardHeader({
-    Key? key,
-    required this.onAddHabit,
-    required this.onAddTask,
-  }) : super(key: key);
+  @override
+  State<DashboardHeader> createState() => _DashboardHeaderState();
+}
+
+class _DashboardHeaderState extends State<DashboardHeader> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  bool _notificationsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+
+    _controller.forward();
+    _loadNotificationPreference();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+    });
+  }
+
+  Future<void> _toggleNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _notificationsEnabled = !_notificationsEnabled;
+    });
+    await prefs.setBool('notifications_enabled', _notificationsEnabled);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    final days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    final months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${days[now.weekday % 7]}, ${months[now.month - 1]} ${now.day}';
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final user = FirebaseAuth.instance.currentUser;
+    final userName = user?.displayName?.split(' ').first ?? 'there';
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            'Habitly',
-            style: GoogleFonts.poppins(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onBackground,
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Habitly',
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onBackground,
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        _notificationsEnabled
+                            ? Icons.notifications_active
+                            : Icons.notifications_off_outlined,
+                        color: _notificationsEnabled
+                            ? colorScheme.onBackground
+                            : colorScheme.onBackground.withOpacity(0.5),
+                      ),
+                      onPressed: _toggleNotifications,
+                      tooltip: _notificationsEnabled
+                          ? 'Disable notifications'
+                          : 'Enable notifications',
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(
+                        Provider.of<ThemeProvider>(context).isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        color: colorScheme.onBackground,
+                      ),
+                      onPressed: () {
+                        Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                      },
+                      tooltip: 'Toggle theme',
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-        ),
-        IconButton(
-          icon: Icon(
-            Provider.of<ThemeProvider>(context).isDarkMode
-                ? Icons.light_mode
-                : Icons.dark_mode,
-            color: colorScheme.onBackground,
-          ),
-          onPressed: () {
-            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-          },
-        ),
-        const SizedBox(width: 8),
-        _ActionButton(
-          onPressed: onAddTask,
-          icon: Icons.task_alt,
-          label: 'Task',
-          color: colorScheme.secondary,
-        ),
-        const SizedBox(width: 8),
-        _ActionButton(
-          onPressed: onAddHabit,
-          icon: Icons.add,
-          label: 'Habit',
-          color: colorScheme.primary,
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _ActionButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(
-        icon,
-        size: 20,
-        color: Colors.white,
-      ),
-      label: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 16),
+            Text(
+              '${_getGreeting()}, $userName',
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onBackground.withOpacity(0.9),
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: colorScheme.onBackground.withOpacity(0.7),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _getFormattedDate(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: colorScheme.onBackground.withOpacity(0.7),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

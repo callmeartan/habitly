@@ -16,6 +16,7 @@ import '../widgets/habits_list.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/task_form.dart';
 
+
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
 
@@ -535,8 +536,6 @@ class _HabitDashboardState extends State<HabitDashboard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DashboardHeader(
-                onAddHabit: _showAddHabitDialog,
-                onAddTask: _showAddTaskDialog,
               ),
               const SizedBox(height: 24),
               DashboardStats(habits: habits),
