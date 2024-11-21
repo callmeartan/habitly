@@ -13,20 +13,28 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize both Firebase and SharedPreferences
-  await Future.wait([
+  final results = await Future.wait([
     Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     ),
     SharedPreferences.getInstance(),
-  ]).then((results) {
-    final prefs = results[1] as SharedPreferences;
-    runApp(
-      ChangeNotifierProvider(
-        create: (_) => ThemeProvider(prefs),
-        child: const MyApp(),
-      ),
-    );
-  });
+  ]);
+
+  final prefs = results[1] as SharedPreferences;
+
+  // Check if this is a fresh install
+  if (prefs.getInt('install_timestamp') == null) {
+    prefs.clear(); // Clear any residual data
+    prefs.setInt('install_timestamp', DateTime.now().millisecondsSinceEpoch);
+    prefs.setBool('offline_mode', false);
+  }
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(prefs),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -39,29 +47,57 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Habitly',
           theme: themeProvider.theme,
-          home: FutureBuilder<SharedPreferences>(
-            future: SharedPreferences.getInstance(),
-            builder: (context, prefsSnapshot) {
-              if (!prefsSnapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          home: const AuthenticationWrapper(),
+        );
+      },
+    );
+  }
+}
 
-              return StreamBuilder<User?>(
-                stream: AuthService().authStateChanges,
-                builder: (context, authSnapshot) {
-                  final isOfflineMode = prefsSnapshot.data!.getBool('offline_mode') ?? false;
+class AuthenticationWrapper extends StatelessWidget {
+  const AuthenticationWrapper({Key? key}) : super(key: key);
 
-                  // User is either in offline mode or authenticated
-                  if (isOfflineMode || authSnapshot.hasData) {
-                    return const MainNavigationScaffold();
-                  }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, prefsSnapshot) {
+        if (!prefsSnapshot.hasData) {
+          return const SizedBox.shrink(); // Return empty widget while loading
+        }
 
-                  // User is neither in offline mode nor authenticated
-                  return const LoginScreen();
-                },
-              );
-            },
-          ),
+        final prefs = prefsSnapshot.data!;
+
+        return StreamBuilder<User?>(
+          stream: AuthService().authStateChanges,
+          builder: (context, authSnapshot) {
+            final isOfflineMode = prefs.getBool('offline_mode') ?? false;
+            final lastLogoutTime = prefs.getInt('last_logout_timestamp');
+            final installTime = prefs.getInt('install_timestamp');
+
+            // If this is a fresh install or reinstall
+            if (installTime == null) {
+              prefs.setInt('install_timestamp', DateTime.now().millisecondsSinceEpoch);
+              prefs.setBool('offline_mode', false);
+              return const LoginScreen();
+            }
+
+            // Check if offline mode is valid
+            bool isValidOfflineMode = false;
+            if (isOfflineMode && lastLogoutTime != null) {
+              final lastLogout = DateTime.fromMillisecondsSinceEpoch(lastLogoutTime);
+              final now = DateTime.now();
+              isValidOfflineMode = now.difference(lastLogout).inDays <= 30;
+            }
+
+            // Show main navigation if user is either authenticated or in valid offline mode
+            if (authSnapshot.hasData || isValidOfflineMode) {
+              return const MainNavigationScaffold();
+            }
+
+            // Default to login screen
+            return const LoginScreen();
+          },
         );
       },
     );

@@ -14,7 +14,6 @@ import '../widgets/dashboard_stats.dart';
 import '../widgets/error_view.dart';
 import '../widgets/habit_form.dart';
 import '../widgets/habits_list.dart';
-import '../widgets/loading_indicator.dart';
 import '../widgets/task_form.dart';
 
 class HabitDashboard extends StatefulWidget {
@@ -38,8 +37,35 @@ class _HabitDashboardState extends State<HabitDashboard> {
   void initState() {
     super.initState();
     _notificationService.init();
-    _loadHabits();
-    _loadTasks();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      // Load both habits and tasks concurrently
+      await Future.wait([
+        _loadHabits(),
+        _loadTasks(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load data: $e';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadTasks() async {
@@ -54,6 +80,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
       print('Error loading tasks: $e');
     }
   }
+
+
 
   void _onDateSelected(DateTime date) {
     setState(() {
@@ -535,9 +563,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const LoadingIndicator();
-    }
+
 
     if (_error != null) {
       return ErrorView(

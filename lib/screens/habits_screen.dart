@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../models/habit.dart';
 import '../repositories/habit_repository.dart';
 import '/widgets/habit_form.dart';
-import '../widgets/loading_indicator.dart';
 import '../widgets/habit_card.dart';
 import 'dart:math' show max;
 
@@ -186,9 +185,6 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (_isLoading) {
-      return const LoadingIndicator();
-    }
 
     return Scaffold(
       body: SafeArea(

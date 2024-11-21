@@ -176,9 +176,6 @@ class LoginScreen extends StatelessWidget {
 
   void _handleAppleLogin(BuildContext context) async {
     try {
-      // Show loading indicator
-      _showLoadingDialog(context);
-
       // Clear offline mode preference
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('offline_mode', false);
@@ -189,17 +186,27 @@ class LoginScreen extends StatelessWidget {
       print("Successfully signed in with Apple. User: ${result.user?.email}");
 
       if (!context.mounted) return;
-      Navigator.pop(context);
 
+      // Navigate to main screen immediately after successful sign in
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
-        (route) => false,
+            (route) => false,
       );
     } catch (e) {
       print("Error during Apple sign in: $e");
       if (!context.mounted) return;
-      Navigator.pop(context); // Dismiss loading
-      _showErrorDialog(context, 'Apple Sign In failed: ${e.toString()}');
+
+      // Show a snackbar instead of a dialog for errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sign in failed. Please try again.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -211,52 +218,7 @@ class LoginScreen extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
-      (route) => false,
-    );
-  }
-
-  void _showLoadingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const CircularProgressIndicator(),
-        ),
-      ),
-    );
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Error',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          message,
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-          ),
-        ],
-      ),
+          (route) => false,
     );
   }
 }

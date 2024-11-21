@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -21,8 +20,22 @@ class AuthService {
   Future<bool> isSignedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final isOfflineMode = prefs.getBool('offline_mode') ?? false;
+    final lastLogoutTime = prefs.getInt('last_logout_timestamp');
 
-    if (isOfflineMode) return true;
+    // Check if offline mode is valid (not expired)
+    if (isOfflineMode && lastLogoutTime != null) {
+      final lastLogout = DateTime.fromMillisecondsSinceEpoch(lastLogoutTime);
+      final now = DateTime.now();
+      // Consider offline mode valid if last logout was within 30 days
+      if (now.difference(lastLogout).inDays <= 30) {
+        return true;
+      } else {
+        // Clear expired offline mode
+        await prefs.setBool('offline_mode', false);
+        return false;
+      }
+    }
+
     return _auth.currentUser != null;
   }
 
@@ -64,9 +77,10 @@ class AuthService {
         }
       }
 
-      // Set offline mode to false
+      // Reset offline mode and update login timestamp
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('offline_mode', false);
+      await prefs.setInt('last_login_timestamp', DateTime.now().millisecondsSinceEpoch);
 
       return userCredential;
     } catch (e) {
@@ -98,24 +112,37 @@ class AuthService {
   Future<void> enableOfflineMode() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('offline_mode', true);
+    await prefs.setInt('last_login_timestamp', DateTime.now().millisecondsSinceEpoch);
   }
 
   // Sign out
   Future<void> signOut() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isOfflineMode = prefs.getBool('offline_mode') ?? false;
 
-      if (!isOfflineMode) {
+      // Always sign out from Firebase if possible
+      if (_auth.currentUser != null) {
         await _auth.signOut();
       }
 
-      // Clear preferences but keep theme settings
+      // Save the logout timestamp
+      await prefs.setInt('last_logout_timestamp', DateTime.now().millisecondsSinceEpoch);
+
+      // Clear all preferences except essential ones
       final themeMode = prefs.getBool('theme_mode');
+      final installTimestamp = prefs.getInt('install_timestamp');
       await prefs.clear();
+
+      // Restore only necessary values
       if (themeMode != null) {
         await prefs.setBool('theme_mode', themeMode);
       }
+      if (installTimestamp != null) {
+        await prefs.setInt('install_timestamp', installTimestamp);
+      }
+
+      // Explicitly set offline mode to false
+      await prefs.setBool('offline_mode', false);
     } catch (e) {
       print("Error signing out: $e");
       rethrow;
@@ -129,7 +156,11 @@ class AuthService {
       if (user != null) {
         await user.delete();
       }
-      await signOut();
+      await signOut(); // This will also clear preferences
+
+      // Clear install timestamp to force fresh start
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('install_timestamp');
     } catch (e) {
       print("Error deleting account: $e");
       rethrow;
