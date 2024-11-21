@@ -5,65 +5,106 @@ class StatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final double? progress;
 
   const StatCard({
     Key? key,
     required this.title,
     required this.value,
     required this.icon,
+    this.progress,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Enhanced color palette for better contrast
+    final cardColor = isDark
+        ? const Color(0xFF2C2C2E) // Dark mode secondary background
+        : Colors.white; // Pure white for light mode
+
+    final accentColor = isDark
+        ? const Color(0xFF0A84FF) // iOS dark mode blue
+        : const Color(0xFF007AFF); // iOS light mode blue
+
     return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(20),
+      width: 170,
+      height: 100,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+          if (!isDark) BoxShadow(
+            color: Colors.black.withOpacity(0.08), // Slightly stronger shadow
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
+          if (!isDark) BoxShadow(
+            color: Colors.black.withOpacity(0.03), // Subtle inner shadow
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
+        border: !isDark ? Border.all(
+          color: Colors.black.withOpacity(0.05), // Subtle border
+          width: 1,
+        ) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Title and icon row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
               Icon(
                 icon,
-                color: Colors.grey[600],
-                size: 24,
+                color: accentColor,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: accentColor,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          // Value display
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[700],
+            style: TextStyle(
+              fontSize: 24,
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
             ),
           ),
+          // Progress bar
+          if (progress != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: progress! / 100,
+                    backgroundColor: accentColor.withOpacity(0.12),
+                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                    minHeight: 3,
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );

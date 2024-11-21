@@ -565,7 +565,10 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 onDateSelected: _onDateSelected,
               ),
               const SizedBox(height: 24),
-              DashboardStats(habits: habits),
+              DashboardStats(
+                habits: habits,
+                tasks: _tasks,
+              ),
               const SizedBox(height: 24),
               Expanded(
                 child: HabitsList(
