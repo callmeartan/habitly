@@ -65,10 +65,27 @@ class DashboardCalendar extends StatelessWidget {
               final date = startOfWeek.add(Duration(days: index));
               final isSelected = _isSameDay(date, selectedDate);
               final isToday = _isSameDay(date, DateTime.now());
-              final tasksForDay = _getTasksForDate(date);
-              final hasHighPriorityTask = tasksForDay.any(
-                      (task) => task.priority.toLowerCase() == 'high'
-              );
+              final activeTasks = _getActiveTasksForDate(date);
+
+              // Get highest priority task for the day
+              String highestPriority = 'low';
+              if (activeTasks.isNotEmpty) {
+                if (activeTasks.any((task) => task.priority.toLowerCase() == 'high')) {
+                  highestPriority = 'high';
+                } else if (activeTasks.any((task) => task.priority.toLowerCase() == 'medium')) {
+                  highestPriority = 'medium';
+                }
+              }
+
+              // Determine the background color
+              Color? backgroundColor;
+              if (isSelected) {
+                backgroundColor = colorScheme.primary;
+              } else if (activeTasks.isNotEmpty) {
+                backgroundColor = _getPriorityColor(highestPriority).withOpacity(0.2);
+              } else if (isToday) {
+                backgroundColor = colorScheme.primary.withOpacity(0.1);
+              }
 
               return GestureDetector(
                 onTap: () => onDateSelected(date),
@@ -76,43 +93,21 @@ class DashboardCalendar extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : (isToday ? colorScheme.primary.withOpacity(0.1) : null),
+                    color: backgroundColor,
                     shape: BoxShape.circle,
-                    border: hasHighPriorityTask && !isSelected
-                        ? Border.all(color: Colors.red, width: 2)
-                        : null,
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Text(
-                        date.day.toString(),
-                        style: GoogleFonts.poppins(
-                          color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurface,
-                          fontWeight: isSelected || isToday
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
+                  child: Center(
+                    child: Text(
+                      date.day.toString(),
+                      style: GoogleFonts.poppins(
+                        color: isSelected
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurface,
+                        fontWeight: isSelected || isToday
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
-                      if (tasksForDay.isNotEmpty && !isSelected)
-                        Positioned(
-                          bottom: 2,
-                          child: Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: hasHighPriorityTask
-                                  ? Colors.red
-                                  : colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               );
@@ -123,11 +118,26 @@ class DashboardCalendar extends StatelessWidget {
     );
   }
 
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.yellow;
+      case 'low':
+      default:
+        return Colors.green;
+    }
+  }
+
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  List<Task> _getTasksForDate(DateTime date) {
-    return tasks.where((task) => _isSameDay(task.dueDate, date)).toList();
+  List<Task> _getActiveTasksForDate(DateTime date) {
+    return tasks.where((task) =>
+    _isSameDay(task.dueDate, date) &&
+        !task.isCompleted // Only include tasks that aren't completed
+    ).toList();
   }
 }
