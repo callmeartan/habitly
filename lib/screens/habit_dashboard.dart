@@ -2,6 +2,7 @@ import 'dart:math' show max;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:habitly/widgets/dashboard_calendar.dart';
 
 import '../models/habit.dart';
 import '../models/task.dart';
@@ -16,12 +17,11 @@ import '../widgets/habits_list.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/task_form.dart';
 
-
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
 
   @override
-  _HabitDashboardState createState() => _HabitDashboardState();
+  State<HabitDashboard> createState() => _HabitDashboardState();
 }
 
 class _HabitDashboardState extends State<HabitDashboard> {
@@ -29,6 +29,8 @@ class _HabitDashboardState extends State<HabitDashboard> {
   final _taskRepository = TaskRepository();
   final NotificationService _notificationService = NotificationService();
   List<Habit> habits = [];
+  List<Task> _tasks = [];
+  DateTime _selectedDate = DateTime.now();
   bool _isLoading = true;
   String? _error;
 
@@ -37,6 +39,26 @@ class _HabitDashboardState extends State<HabitDashboard> {
     super.initState();
     _notificationService.init();
     _loadHabits();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    try {
+      final loadedTasks = await _taskRepository.loadTasks();
+      if (mounted) {
+        setState(() {
+          _tasks = loadedTasks;
+        });
+      }
+    } catch (e) {
+      print('Error loading tasks: $e');
+    }
+  }
+
+  void _onDateSelected(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
   }
 
   Future<void> _loadHabits() async {
@@ -51,37 +73,37 @@ class _HabitDashboardState extends State<HabitDashboard> {
       setState(() {
         habits = loadedHabits.isEmpty
             ? [
-                Habit(
-                  id: 1,
-                  name: 'Morning Meditation',
-                  category: 'Health',
-                  streak: 5,
-                  frequency: 'daily',
-                  completedToday: false,
-                  progress: 0.85,
-                  reminderTime: null,
-                ),
-                Habit(
-                  id: 2,
-                  name: 'Read 30 Minutes',
-                  category: 'Personal Development',
-                  streak: 12,
-                  frequency: 'daily',
-                  completedToday: true,
-                  progress: 0.92,
-                  reminderTime: null,
-                ),
-                Habit(
-                  id: 3,
-                  name: 'Weekly Exercise',
-                  category: 'Health',
-                  streak: 3,
-                  frequency: 'weekly',
-                  completedToday: false,
-                  progress: 0.75,
-                  reminderTime: null,
-                ),
-              ]
+          Habit(
+            id: 1,
+            name: 'Morning Meditation',
+            category: 'Health',
+            streak: 5,
+            frequency: 'daily',
+            completedToday: false,
+            progress: 0.85,
+            reminderTime: null,
+          ),
+          Habit(
+            id: 2,
+            name: 'Read 30 Minutes',
+            category: 'Personal Development',
+            streak: 12,
+            frequency: 'daily',
+            completedToday: true,
+            progress: 0.92,
+            reminderTime: null,
+          ),
+          Habit(
+            id: 3,
+            name: 'Weekly Exercise',
+            category: 'Health',
+            streak: 3,
+            frequency: 'weekly',
+            completedToday: false,
+            progress: 0.75,
+            reminderTime: null,
+          ),
+        ]
             : loadedHabits;
         _isLoading = false;
       });
@@ -165,18 +187,18 @@ class _HabitDashboardState extends State<HabitDashboard> {
         );
 
         List<DateTime> updatedCompletionDates =
-            List<DateTime>.from(habit.completionDates);
+        List<DateTime>.from(habit.completionDates);
 
         if (isCompleting) {
           if (!updatedCompletionDates.any((date) =>
-              date.year == today.year &&
+          date.year == today.year &&
               date.month == today.month &&
               date.day == today.day)) {
             updatedCompletionDates.add(today);
           }
         } else {
           updatedCompletionDates.removeWhere((date) =>
-              date.year == today.year &&
+          date.year == today.year &&
               date.month == today.month &&
               date.day == today.day);
         }
@@ -285,7 +307,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
                 if (formKey.currentState!.validate()) {
                   setState(() {
                     final habitIndex =
-                        habits.indexWhere((h) => h.id == habit.id);
+                    habits.indexWhere((h) => h.id == habit.id);
                     if (habitIndex != -1) {
                       habits[habitIndex] = habit.copyWith(
                         name: name,
@@ -303,7 +325,7 @@ class _HabitDashboardState extends State<HabitDashboard> {
                     }
                     if (reminderTime != null) {
                       final habitIndex =
-                          habits.indexWhere((h) => h.id == habit.id);
+                      habits.indexWhere((h) => h.id == habit.id);
                       await _scheduleReminder(habits[habitIndex]);
                     }
                   }
@@ -535,7 +557,12 @@ class _HabitDashboardState extends State<HabitDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DashboardHeader(
+              DashboardHeader(),
+              const SizedBox(height: 24),
+              DashboardCalendar(
+                tasks: _tasks,
+                selectedDate: _selectedDate,
+                onDateSelected: _onDateSelected,
               ),
               const SizedBox(height: 24),
               DashboardStats(habits: habits),
