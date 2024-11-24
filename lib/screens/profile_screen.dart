@@ -8,6 +8,7 @@ import 'package:habitly/screens/login_intro_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:habitly/providers/theme_provider.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -98,12 +99,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       if (image != null) {
+        // Get the app's document directory for permanent storage
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        final String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final String permanentPath = '${appDocDir.path}/$fileName';
+
+        // Copy the image to permanent storage
+        await File(image.path).copy(permanentPath);
+
         setState(() {
-          _imagePath = image.path;
+          _imagePath = permanentPath;
         });
 
+        // Save the permanent path to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image', image.path);
+        await prefs.setString('profile_image', permanentPath);
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
