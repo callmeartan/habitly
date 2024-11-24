@@ -120,39 +120,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       );
 
       if (image != null) {
-        // Get the app's document directory for permanent storage
         final Directory appDocDir = await getApplicationDocumentsDirectory();
         final String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final String permanentPath = '${appDocDir.path}/$fileName';
 
-        // Copy the image to permanent storage
         await File(image.path).copy(permanentPath);
 
         setState(() {
           _imagePath = permanentPath;
         });
 
-        // Save the permanent path to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('profile_image', permanentPath);
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Profile picture updated successfully!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update profile picture'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      print('Failed to update profile picture: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
