@@ -167,31 +167,8 @@ class HabitDashboardState extends State<HabitDashboard> {
         habitName: habit.name,
         scheduledTime: finalScheduledTime,
       );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Reminder set for ${habit.name} at ${_formatTime(finalScheduledTime)}',
-              style: GoogleFonts.poppins(),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Failed to set reminder: ${e.toString()}',
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      print('Failed to set reminder: $e');
     }
   }
 
@@ -270,9 +247,6 @@ class HabitDashboardState extends State<HabitDashboard> {
                 });
                 await _habitRepository.saveHabits(habits);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Habit deleted successfully')),
-                );
               },
               child: Text(
                 'Delete',
@@ -283,9 +257,7 @@ class HabitDashboardState extends State<HabitDashboard> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete habit: $e')),
-      );
+      print('Failed to delete habit: $e');
     }
   }
 
@@ -359,9 +331,6 @@ class HabitDashboardState extends State<HabitDashboard> {
                   }
 
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Habit updated successfully')),
-                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -455,17 +424,8 @@ class HabitDashboardState extends State<HabitDashboard> {
 
                     if (!mounted) return;
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Task added successfully')),
-                    );
                   } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to add task: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    print('Failed to add task: $e');
                   }
                 } else if (dueDate == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -542,9 +502,6 @@ class HabitDashboardState extends State<HabitDashboard> {
                   await _habitRepository.saveHabits(habits);
                   await _scheduleReminder(newHabit);
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Habit added successfully')),
-                  );
                 }
               },
               style: ElevatedButton.styleFrom(

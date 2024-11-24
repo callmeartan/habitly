@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:habitly/providers/theme_provider.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -17,7 +18,7 @@ class ProfileScreen extends StatefulWidget {
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   final AuthService _authService = AuthService();
   User? _currentUser;
   String? _imagePath;
@@ -25,12 +26,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Guest User';
   bool _notificationsEnabled = false;
   bool _darkModeEnabled = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _loadUserData();
     _setupAuthListener();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   void _setupAuthListener() {
@@ -90,6 +108,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage() async {
     try {
+      setState(() => _isLoading = true);
+      HapticFeedback.mediumImpact();
+
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
@@ -114,9 +135,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Save the permanent path to SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('profile_image', permanentPath);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile picture updated successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      debugPrint('Error picking image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile picture'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -203,205 +241,223 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
+        child: AnimatedBuilder(
+          animation: _fadeAnimation,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Profile',
-                          style: GoogleFonts.poppins(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onBackground,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary.withOpacity(0.2),
+                            colorScheme.primary.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
-                        const Spacer(),
-                        IconButton(
-                          icon: Icon(
-                            Icons.edit,
-                            color: colorScheme.primary,
-                          ),
-                          onPressed: _editProfile,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(30),
+                          bottomRight: Radius.circular(30),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Stack(
-                      children: [
-                        GestureDetector(
-                          onTap: _pickImage,
-                          child: Stack(
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
                             children: [
-                              CircleAvatar(
-                                radius: 60,
-                                backgroundColor: colorScheme.primary.withOpacity(0.2),
-                                backgroundImage: _imagePath != null
-                                    ? FileImage(File(_imagePath!))
-                                    : null,
-                                child: _imagePath == null
-                                    ? Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: colorScheme.primary,
-                                )
-                                    : null,
+                              Text(
+                                'Profile',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onBackground,
+                                ),
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.photo_library,
-                                    size: 20,
-                                    color: colorScheme.onPrimary,
-                                  ),
+                              const Spacer(),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.edit,
+                                  color: colorScheme.primary,
+                                ),
+                                onPressed: _editProfile,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: _pickImage,
+                                child: Stack(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 60,
+                                      backgroundColor: colorScheme.primary.withOpacity(0.2),
+                                      backgroundImage: _imagePath != null
+                                          ? FileImage(File(_imagePath!))
+                                          : null,
+                                      child: _imagePath == null
+                                          ? Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: colorScheme.primary,
+                                      )
+                                          : null,
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.photo_library,
+                                          size: 20,
+                                          color: colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _userName,
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onBackground,
+                            ),
+                          ),
+                          Text(
+                            _isOfflineMode ? 'Offline Mode' : 'Apple Sign In',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: colorScheme.onBackground.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Hero(
+                      tag: 'settings_section',
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Settings',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onBackground,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildSettingsTile(
+                              icon: Icons.notifications,
+                              title: 'Notifications',
+                              subtitle: 'Enable push notifications',
+                              trailing: Switch(
+                                value: _notificationsEnabled,
+                                onChanged: _toggleNotifications,
+                              ),
+                              colorScheme: colorScheme,
+                            ),
+                            _buildSettingsTile(
+                              icon: Icons.dark_mode,
+                              title: 'Dark Mode',
+                              subtitle: 'Toggle dark theme',
+                              trailing: Switch(
+                                value: _darkModeEnabled,
+                                onChanged: _toggleDarkMode,
+                              ),
+                              colorScheme: colorScheme,
+                            ),
+                            _buildSettingsTile(
+                              icon: Icons.backup,
+                              title: 'Backup Data',
+                              subtitle: 'Sync your data to the cloud',
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: colorScheme.onBackground.withOpacity(0.5),
+                              ),
+                              colorScheme: colorScheme,
+                              onTap: () async {
+                                // Show "Coming Soon" message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Cloud backup coming soon!')),
+                                );
+                              },
+                            ),
+                            _buildSettingsTile(
+                              icon: Icons.security,
+                              title: 'Privacy',
+                              subtitle: 'Manage your data and permissions',
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: colorScheme.onBackground.withOpacity(0.5),
+                              ),
+                              colorScheme: colorScheme,
+                            ),
+                            _buildSettingsTile(
+                              icon: Icons.help_outline,
+                              title: 'Feedback',
+                              subtitle: 'Help us improve Habitly',
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: colorScheme.onBackground.withOpacity(0.5),
+                              ),
+                              colorScheme: colorScheme,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _userName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onBackground,
                       ),
                     ),
-                    Text(
-                      _isOfflineMode ? 'Offline Mode' : 'Apple Sign In',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: colorScheme.onBackground.withOpacity(0.6),
+
+                    // Sign Out Button
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: ElevatedButton(
+                        onPressed: _handleSignOut,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          minimumSize: const Size(double.infinity, 0),
+                        ),
+                        child: Text(
+                          'Log Out',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onError,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Settings Section
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Settings',
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onBackground,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSettingsTile(
-                      icon: Icons.notifications,
-                      title: 'Notifications',
-                      subtitle: 'Enable push notifications',
-                      trailing: Switch(
-                        value: _notificationsEnabled,
-                        onChanged: _toggleNotifications,
-                      ),
-                      colorScheme: colorScheme,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.dark_mode,
-                      title: 'Dark Mode',
-                      subtitle: 'Toggle dark theme',
-                      trailing: Switch(
-                        value: _darkModeEnabled,
-                        onChanged: _toggleDarkMode,
-                      ),
-                      colorScheme: colorScheme,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.backup,
-                      title: 'Backup Data',
-                      subtitle: 'Sync your data to the cloud',
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: colorScheme.onBackground.withOpacity(0.5),
-                      ),
-                      colorScheme: colorScheme,
-                      onTap: () async {
-                        // Show "Coming Soon" message
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Cloud backup coming soon!')),
-                        );
-                      },
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.security,
-                      title: 'Privacy',
-                      subtitle: 'Manage your data and permissions',
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: colorScheme.onBackground.withOpacity(0.5),
-                      ),
-                      colorScheme: colorScheme,
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.help_outline,
-                      title: 'Feedback',
-                      subtitle: 'Help us improve Habitly',
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: colorScheme.onBackground.withOpacity(0.5),
-                      ),
-                      colorScheme: colorScheme,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Sign Out Button
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: ElevatedButton(
-                  onPressed: _handleSignOut,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.error,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    minimumSize: const Size(double.infinity, 0),
-                  ),
-                  child: Text(
-                    'Log Out',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onError,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -415,47 +471,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required ColorScheme colorScheme,
     VoidCallback? onTap,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor,
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: colorScheme.primary,
-            size: 24,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap?.call();
+          },
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            title: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            trailing: trailing,
+            onTap: onTap,
           ),
         ),
-        title: Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-        trailing: trailing,
-        onTap: onTap,
       ),
     );
   }
