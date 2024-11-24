@@ -4,8 +4,9 @@ import 'package:intl/intl.dart';
 import '../models/task.dart';
 import '../repositories/task_repository.dart';
 import '../widgets/task_form.dart';
-import '../widgets/task_card.dart'; // Import the new TaskCard widget
+import '../widgets/task_card.dart';
 import 'dart:math' show max;
+import '../services/firebase_sync_service.dart';
 
 class TasksScreen extends StatefulWidget {
   final VoidCallback onTaskUpdated;
@@ -24,6 +25,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   final TaskRepository _taskRepository = TaskRepository();
   List<Task> _tasks = [];
   bool _isLoading = true;
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
 
   @override
   void initState() {
@@ -322,6 +324,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 
                             final newTask = Task(
                               id: newTaskId,
+                              userId: _firebaseSyncService.currentUserId ?? '',
                               title: title,
                               description: description,
                               category: category,
@@ -329,6 +332,8 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               dueDate: dueDate!,
                               dueTime: dueTime,
                               reminder: reminder,
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
                             );
 
                             await _taskRepository.addTask(newTask);

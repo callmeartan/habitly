@@ -5,6 +5,7 @@ import '../models/habit.dart';
 import '../repositories/habit_repository.dart';
 import '/widgets/habit_form.dart';
 import '../widgets/habit_card.dart';
+import '../services/firebase_sync_service.dart';
 import 'dart:math' show max;
 
 
@@ -25,6 +26,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   final HabitRepository _habitRepository = HabitRepository();
   List<Habit> _habits = [];
   bool _isLoading = true;
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
 
   Future<void> _showAddHabitDialog() async {
     final formKey = GlobalKey<FormState>();
@@ -93,6 +95,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                               id: _habits.isEmpty
                                   ? 1
                                   : _habits.map((h) => h.id).reduce((a, b) => max(a, b)) + 1,  // Fixed this line
+                              userId: _firebaseSyncService.currentUserId ?? '',
                               name: name,
                               category: category,
                               streak: 0,
@@ -101,6 +104,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                               progress: 0.0,
                               reminderTime: reminderTime,
                               completionDates: [],
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
                             );
 
                             setState(() {

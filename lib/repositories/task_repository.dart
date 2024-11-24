@@ -1,15 +1,19 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/models/task.dart';
+import '../services/firebase_sync_service.dart';
+
 class TaskRepository {
   static const String _key = 'tasks';
-
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
 
   Future<void> saveTasks(List<Task> tasks) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final tasksJson = tasks.map((task) => task.toJson()).toList();
       await prefs.setString(_key, jsonEncode(tasksJson));
+
+      await _firebaseSyncService.syncTasksToCloud(tasks);
     } catch (e) {
       throw Exception('Failed to save tasks: $e');
     }
@@ -23,7 +27,10 @@ class TaskRepository {
       if (tasksString == null) return [];
 
       final tasksList = jsonDecode(tasksString) as List;
-      return tasksList.map((taskJson) => Task.fromJson(taskJson)).toList();
+      return tasksList
+          .map((taskJson) => Task.fromJson(taskJson))
+          .where((task) => !task.isDeleted)  // Filter out deleted tasks
+          .toList();
     } catch (e) {
       throw Exception('Failed to load tasks: $e');
     }
@@ -58,8 +65,16 @@ class TaskRepository {
   Future<void> deleteTask(int taskId) async {
     try {
       final tasks = await loadTasks();
-      tasks.removeWhere((task) => task.id == taskId);
-      await saveTasks(tasks);
+      final taskIndex = tasks.indexWhere((t) => t.id == taskId);
+
+      if (taskIndex != -1) {
+        // Instead of removing, mark as deleted
+        tasks[taskIndex] = tasks[taskIndex].copyWith(
+          isDeleted: true,
+          updatedAt: DateTime.now(),
+        );
+        await saveTasks(tasks);
+      }
     } catch (e) {
       throw Exception('Failed to delete task: $e');
     }
@@ -171,14 +186,21 @@ class TaskRepository {
     }
   }
 
-
-
   Future<void> clearAll() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_key);
     } catch (e) {
       throw Exception('Failed to clear tasks: $e');
+    }
+  }
+
+  Future<void> syncWithCloud() async {
+    try {
+      final cloudTasks = await _firebaseSyncService.fetchTasksFromCloud();
+      await saveTasks(cloudTasks);
+    } catch (e) {
+      throw Exception('Failed to sync tasks from cloud: $e');
     }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habitly/widgets/dashboard_calendar.dart';
+import '../services/firebase_sync_service.dart';
 
 import '../models/habit.dart';
 import '../models/task.dart';
@@ -27,6 +28,7 @@ class HabitDashboardState extends State<HabitDashboard> {
   final _habitRepository = HabitRepository();
   final _taskRepository = TaskRepository();
   final NotificationService _notificationService = NotificationService();
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
   List<Habit> habits = [];
   List<Task> _tasks = [];
   DateTime _selectedDate = DateTime.now();
@@ -103,6 +105,7 @@ class HabitDashboardState extends State<HabitDashboard> {
             ? [
           Habit(
             id: 1,
+            userId: _firebaseSyncService.currentUserId ?? '',
             name: 'Morning Meditation',
             category: 'Health',
             streak: 5,
@@ -110,6 +113,8 @@ class HabitDashboardState extends State<HabitDashboard> {
             completedToday: false,
             progress: 0.85,
             reminderTime: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
           Habit(
             id: 2,
@@ -120,6 +125,8 @@ class HabitDashboardState extends State<HabitDashboard> {
             completedToday: true,
             progress: 0.92,
             reminderTime: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
           Habit(
             id: 3,
@@ -130,6 +137,8 @@ class HabitDashboardState extends State<HabitDashboard> {
             completedToday: false,
             progress: 0.75,
             reminderTime: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
         ]
             : loadedHabits;
@@ -488,6 +497,7 @@ class HabitDashboardState extends State<HabitDashboard> {
                     id: habits.isEmpty
                         ? 1
                         : habits.map((h) => h.id).reduce(max) + 1,
+                    userId: _firebaseSyncService.currentUserId ?? '',
                     name: name,
                     category: category,
                     streak: 0,
@@ -495,6 +505,8 @@ class HabitDashboardState extends State<HabitDashboard> {
                     completedToday: false,
                     progress: 0.0,
                     reminderTime: reminderTime,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
                   );
                   setState(() {
                     habits.add(newHabit);

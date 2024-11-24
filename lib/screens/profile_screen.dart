@@ -10,15 +10,23 @@ import 'package:provider/provider.dart';
 import 'package:habitly/providers/theme_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import '../services/firebase_sync_service.dart';
+import '../repositories/habit_repository.dart';
+import '../repositories/task_repository.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  final VoidCallback? onRefresh;
+
+  const ProfileScreen({
+    Key? key,
+    this.onRefresh,
+  }) : super(key: key);
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
   final AuthService _authService = AuthService();
   User? _currentUser;
   String? _imagePath;
@@ -29,6 +37,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   bool _isLoading = false;
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
+  final HabitRepository _habitRepository = HabitRepository();
+  final TaskRepository _taskRepository = TaskRepository();
+  bool _isSyncing = false;
+  late AnimationController _syncAnimationController;
 
   @override
   void initState() {
@@ -43,11 +56,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _loadUserData();
     _setupAuthListener();
     _animationController.forward();
+    _syncAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _syncAnimationController.dispose();
     super.dispose();
   }
 
@@ -216,6 +234,51 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
+  Future<void> _syncData() async {
+    if (!_firebaseSyncService.isUserSignedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to sync data')),
+      );
+      return;
+    }
+
+    setState(() => _isSyncing = true);
+    _syncAnimationController.repeat();
+
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Syncing data...')),
+      );
+
+      // Perform sync
+      await Future.wait([
+        _habitRepository.syncWithCloud(),
+        _taskRepository.syncWithCloud(),
+      ]);
+
+      if (!mounted) return;
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data synced successfully!')),
+      );
+
+      // Refresh the UI
+      widget.onRefresh?.call();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sync failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+        _syncAnimationController.stop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -369,21 +432,24 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                               colorScheme: colorScheme,
                             ),
                             _buildSettingsTile(
-                              icon: Icons.backup,
-                              title: 'Backup Data',
-                              subtitle: 'Sync your data to the cloud',
-                              trailing: Icon(
+                              icon: Icons.sync,
+                              title: 'Sync Data',
+                              subtitle: 'Backup and sync your data to cloud',
+                              trailing: _isSyncing
+                                  ? RotationTransition(
+                                turns: _syncAnimationController,
+                                child: Icon(
+                                  Icons.sync,
+                                  color: colorScheme.primary,
+                                ),
+                              )
+                                  : Icon(
                                 Icons.arrow_forward_ios,
                                 size: 16,
                                 color: colorScheme.onBackground.withOpacity(0.5),
                               ),
                               colorScheme: colorScheme,
-                              onTap: () async {
-                                // Show "Coming Soon" message
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Cloud backup coming soon!')),
-                                );
-                              },
+                              onTap: _isSyncing ? null : _syncData,
                             ),
                             _buildSettingsTile(
                               icon: Icons.security,
@@ -395,17 +461,23 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                                 color: colorScheme.onBackground.withOpacity(0.5),
                               ),
                               colorScheme: colorScheme,
+                              onTap: () {
+                                // TODO: Implement privacy settings
+                              },
                             ),
                             _buildSettingsTile(
                               icon: Icons.help_outline,
-                              title: 'Feedback',
-                              subtitle: 'Help us improve Habitly',
+                              title: 'Help & Support',
+                              subtitle: 'Get help using Habitly',
                               trailing: Icon(
                                 Icons.arrow_forward_ios,
                                 size: 16,
                                 color: colorScheme.onBackground.withOpacity(0.5),
                               ),
                               colorScheme: colorScheme,
+                              onTap: () {
+                                // TODO: Implement help & support
+                              },
                             ),
                           ],
                         ),

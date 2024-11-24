@@ -1,5 +1,6 @@
 class Habit {
   final int id;
+  final String userId;
   String name;
   String category;
   int streak;
@@ -8,9 +9,13 @@ class Habit {
   double progress;
   DateTime? reminderTime;
   List<DateTime> completionDates;
+  DateTime createdAt;
+  DateTime updatedAt;
+  bool isDeleted;
 
   Habit({
     required this.id,
+    String? userId,
     required this.name,
     required this.category,
     required this.streak,
@@ -18,8 +23,15 @@ class Habit {
     required this.completedToday,
     required this.progress,
     this.reminderTime,
-    List<DateTime>? completionDates,  // Add this parameter
-  }) : completionDates = completionDates ?? [];  // Initialize with empty list if null
+    List<DateTime>? completionDates,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    this.isDeleted = false,
+  }) :
+        userId = userId ?? '',
+        completionDates = completionDates ?? [],
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   Habit copyWith({
     String? name,
@@ -30,9 +42,12 @@ class Habit {
     double? progress,
     DateTime? reminderTime,
     List<DateTime>? completionDates,
+    DateTime? updatedAt,
+    bool? isDeleted,
   }) {
     return Habit(
       id: id,
+      userId: userId,
       name: name ?? this.name,
       category: category ?? this.category,
       streak: streak ?? this.streak,
@@ -41,11 +56,15 @@ class Habit {
       progress: progress ?? this.progress,
       reminderTime: reminderTime ?? this.reminderTime,
       completionDates: completionDates ?? this.completionDates,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'userId': userId,
     'name': name,
     'category': category,
     'streak': streak,
@@ -54,10 +73,12 @@ class Habit {
     'progress': progress,
     'reminderTime': reminderTime?.toIso8601String(),
     'completionDates': completionDates.map((date) => date.toIso8601String()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'isDeleted': isDeleted,
   };
 
   factory Habit.fromJson(Map<String, dynamic> json) {
-    // Handle completion dates parsing
     List<DateTime> parsedDates = [];
     if (json['completionDates'] != null) {
       parsedDates = (json['completionDates'] as List)
@@ -67,25 +88,27 @@ class Habit {
 
     return Habit(
       id: json['id'],
+      userId: json['userId'] ?? '',
       name: json['name'],
       category: json['category'],
       streak: json['streak'],
       frequency: json['frequency'],
       completedToday: json['completedToday'],
-      progress: json['progress'].toDouble(),  // Ensure proper double conversion
+      progress: json['progress'].toDouble(),
       reminderTime: json['reminderTime'] != null
           ? DateTime.parse(json['reminderTime'])
           : null,
-      completionDates: parsedDates,  // Add this
+      completionDates: parsedDates,
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      isDeleted: json['isDeleted'] ?? false,
     );
   }
 
-  // Optional: Add a method to normalize dates (remove time component)
   DateTime _normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
 
-  // Optional: Add helper methods for completion dates
   bool isCompletedOnDate(DateTime date) {
     final normalizedDate = _normalizeDate(date);
     return completionDates.any((d) => _normalizeDate(d).isAtSameMomentAs(normalizedDate));
@@ -103,7 +126,6 @@ class Habit {
     completionDates.removeWhere((d) => _normalizeDate(d).isAtSameMomentAs(normalizedDate));
   }
 
-  // Optional: Add method to get current streak
   int getCurrentStreak() {
     if (completionDates.isEmpty) return 0;
 
@@ -123,19 +145,17 @@ class Habit {
       }
     }
 
-    // Check if streak is still active (includes today or yesterday)
     final today = DateTime.now();
     final latestDate = sortedDates[0];
     final daysSinceLatest = today.difference(latestDate).inDays;
 
     if (daysSinceLatest > 1) {
-      return 0; // Streak is broken if more than 1 day has passed
+      return 0;
     }
 
     return streak;
   }
 
-  // Optional: Add method to get best streak
   int getBestStreak() {
     if (completionDates.isEmpty) return 0;
 
