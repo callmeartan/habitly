@@ -66,15 +66,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1011838485758',
     projectId: 'habitly-auth-test',
     storageBucket: 'habitly-auth-test.firebasestorage.app',
+    iosClientId: '1011838485758-o3lb1uemvg6fbpfdu07o030t6immrd3p.apps.googleusercontent.com',
     iosBundleId: 'dev.artan.habitly',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCJ-69_JcoDEMiR6g1JNI-oeYKT-Lbj3JI',
-    appId: '1:1011838485758:ios:8a9da2652aeb720c8f91af',
+    appId: '1:1011838485758:ios:cf41fb35121c29508f91af',
     messagingSenderId: '1011838485758',
     projectId: 'habitly-auth-test',
     storageBucket: 'habitly-auth-test.firebasestorage.app',
-    iosBundleId: 'com.artan.habitly',
+    iosClientId: '1011838485758-o3lb1uemvg6fbpfdu07o030t6immrd3p.apps.googleusercontent.com',
+    iosBundleId: 'dev.artan.habitly',
   );
+
 }

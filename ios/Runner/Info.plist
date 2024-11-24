@@ -2,6 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.1011838485758-bbk2rpikiud47ikrrp8vvlp3ju61oh5l</string>
+            </array>
+        </dict>
+    </array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -65,5 +74,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>GIDClientID</key>
+	<string>1011838485758-bbk2rpikiud47ikrrp8vvlp3ju61oh5l.apps.googleusercontent.com</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

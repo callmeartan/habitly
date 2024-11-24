@@ -57,6 +57,13 @@ class LoginScreen extends StatelessWidget {
                 context: context,
               ),
               const SizedBox(height: 16),
+              _buildLoginButton(
+                onTap: () => _handleGoogleLogin(context),
+                text: 'Continue with Google',
+                icon: Icons.g_mobiledata,
+                context: context,
+              ),
+              const SizedBox(height: 16),
               _buildOfflineButton(
                 onTap: () => _handleOfflineMode(context),
                 context: context,
@@ -197,6 +204,41 @@ class LoginScreen extends StatelessWidget {
       if (!context.mounted) return;
 
       // Show a snackbar instead of a dialog for errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sign in failed. Please try again.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _handleGoogleLogin(BuildContext context) async {
+    try {
+      // Clear offline mode preference
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('offline_mode', false);
+
+      final authService = AuthService();
+      final result = await authService.signInWithGoogle();
+
+      print("Successfully signed in with Google. User: ${result.user?.email}");
+
+      if (!context.mounted) return;
+
+      // Navigate to main screen immediately after successful sign in
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MainNavigationScaffold()),
+            (route) => false,
+      );
+    } catch (e) {
+      print("Error during Google sign in: $e");
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

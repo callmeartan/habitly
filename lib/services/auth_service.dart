@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -163,6 +164,40 @@ class AuthService {
       await prefs.remove('install_timestamp');
     } catch (e) {
       print("Error deleting account: $e");
+      rethrow;
+    }
+  }
+
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: '1011838485758-bbk2rpikiud47ikrrp8vvlp3ju61oh5l.apps.googleusercontent.com',
+        scopes: ['email'],
+      );
+
+      // Begin interactive sign in process
+      final GoogleSignInAccount? gUser = await googleSignIn.signIn();
+
+      if (gUser == null) {
+        throw FirebaseAuthException(
+          code: 'ERROR_ABORTED_BY_USER',
+          message: 'Sign in aborted by user',
+        );
+      }
+
+      // Obtain auth details from request
+      final GoogleSignInAuthentication gAuth = await gUser.authentication;
+
+      // Create a new credential for user
+      final credential = GoogleAuthProvider.credential(
+        accessToken: gAuth.accessToken,
+        idToken: gAuth.idToken,
+      );
+
+      // Finally, sign in
+      return await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+      print('Error in signInWithGoogle: $e');
       rethrow;
     }
   }

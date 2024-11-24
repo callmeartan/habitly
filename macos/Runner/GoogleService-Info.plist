@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>1011838485758-o3lb1uemvg6fbpfdu07o030t6immrd3p.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1011838485758-o3lb1uemvg6fbpfdu07o030t6immrd3p</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCJ-69_JcoDEMiR6g1JNI-oeYKT-Lbj3JI</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.artan.habitly</string>
+	<string>dev.artan.habitly</string>
 	<key>PROJECT_ID</key>
 	<string>habitly-auth-test</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1011838485758:ios:8a9da2652aeb720c8f91af</string>
+	<string>1:1011838485758:ios:cf41fb35121c29508f91af</string>
 </dict>
 </plist>

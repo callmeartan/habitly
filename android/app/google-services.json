@@ -7,31 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1011838485758:android:885efc58a1e0165d8f91af",
-        "android_client_info": {
-          "package_name": "dev.artan.habitly"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDQYs8iHGczaKjl9Pgc0Xw0Nm7vYiiFMkM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:1011838485758:android:216c1b21fa8ec8ea8f91af",
         "android_client_info": {
           "package_name": "dev.artan.habitly"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1011838485758-jmmfbk60n2g7nj1uf80kdub762ei46iu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDQYs8iHGczaKjl9Pgc0Xw0Nm7vYiiFMkM"
@@ -39,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1011838485758-2slcq2r16u2qsf45q2pcheflh636i0ca.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1011838485758-bbk2rpikiud47ikrrp8vvlp3ju61oh5l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.artan.habitly"
+              }
+            }
+          ]
         }
       }
     }
