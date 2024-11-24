@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import '../services/firebase_sync_service.dart';
 import '../repositories/habit_repository.dart';
 import '../repositories/task_repository.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onRefresh;
@@ -279,6 +280,151 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     }
   }
 
+  Future<void> _showHelpSupport() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Help & Support',
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildHelpTile(
+              icon: Icons.email_outlined,
+              title: 'Contact Support',
+              onTap: () async {
+                final Uri emailLaunchUri = Uri(
+                  scheme: 'mailto',
+                  path: 'support@habitly.app',
+                  queryParameters: {
+                    'subject': 'Habitly Support Request',
+                  },
+                );
+                if (await canLaunchUrl(emailLaunchUri)) {
+                  await launchUrl(emailLaunchUri);
+                }
+              },
+            ),
+            _buildHelpTile(
+              icon: Icons.description_outlined,
+              title: 'FAQ',
+              onTap: () async {
+                final url = Uri.parse('https://habitly.app/faq');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                }
+              },
+            ),
+            _buildHelpTile(
+              icon: Icons.feedback_outlined,
+              title: 'Send Feedback',
+              onTap: () => _showFeedbackDialog(),
+            ),
+            _buildHelpTile(
+              icon: Icons.info_outline,
+              title: 'About Habitly',
+              onTap: () => _showAboutDialog(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+
+  Future<void> _showFeedbackDialog() async {
+    final TextEditingController feedbackController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Send Feedback',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: feedbackController,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'Tell us what you think...',
+            hintStyle: GoogleFonts.poppins(),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // TODO: Implement feedback submission
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Thank you for your feedback!')),
+              );
+            },
+            child: Text('Submit', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AboutDialog(
+        applicationName: 'Habitly',
+        applicationVersion: '1.0.0',
+        applicationIcon: Image.asset(
+          'assets/icon/icon.png',
+          width: 50,
+          height: 50,
+        ),
+        children: [
+          const SizedBox(height: 16),
+          Text(
+            'A habit tracking app to help you build better habits and achieve your goals.',
+            style: GoogleFonts.poppins(),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '© 2024 Habitly. All rights reserved.',
+            style: GoogleFonts.poppins(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -452,20 +598,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               onTap: _isSyncing ? null : _syncData,
                             ),
                             _buildSettingsTile(
-                              icon: Icons.security,
-                              title: 'Privacy',
-                              subtitle: 'Manage your data and permissions',
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: colorScheme.onBackground.withOpacity(0.5),
-                              ),
-                              colorScheme: colorScheme,
-                              onTap: () {
-                                // TODO: Implement privacy settings
-                              },
-                            ),
-                            _buildSettingsTile(
                               icon: Icons.help_outline,
                               title: 'Help & Support',
                               subtitle: 'Get help using Habitly',
@@ -475,9 +607,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                 color: colorScheme.onBackground.withOpacity(0.5),
                               ),
                               colorScheme: colorScheme,
-                              onTap: () {
-                                // TODO: Implement help & support
-                              },
+                              onTap: _showHelpSupport,
                             ),
                           ],
                         ),
