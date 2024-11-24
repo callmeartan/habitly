@@ -20,10 +20,10 @@ class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
 
   @override
-  State<HabitDashboard> createState() => _HabitDashboardState();
+  HabitDashboardState createState() => HabitDashboardState();
 }
 
-class _HabitDashboardState extends State<HabitDashboard> {
+class HabitDashboardState extends State<HabitDashboard> {
   final _habitRepository = HabitRepository();
   final _taskRepository = TaskRepository();
   final NotificationService _notificationService = NotificationService();
@@ -559,6 +559,17 @@ class _HabitDashboardState extends State<HabitDashboard> {
         );
       },
     );
+  }
+
+  void _refreshDashboard() async {
+    await Future.wait([
+      _loadHabits(),
+      _loadTasks(),
+    ]);
+  }
+
+  void refreshDashboard() {
+    _loadInitialData();
   }
 
   @override

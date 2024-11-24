@@ -15,14 +15,27 @@ class MainNavigationScaffold extends StatefulWidget {
 
 class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   int _selectedIndex = 0;
+  late final List<Widget> _screens;
+  final _dashboardKey = GlobalKey<HabitDashboardState>();
 
-  // Keep track of navigation history for better state preservation
-  final List<Widget> _screens = [
-    const HabitDashboard(),
-    const HabitsScreen(),
-    const TasksScreen(),
-    const ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HabitDashboard(key: _dashboardKey),
+      HabitsScreen(
+        onHabitUpdated: _refreshDashboard,
+      ),
+      TasksScreen(
+        onTaskUpdated: _refreshDashboard,
+      ),
+      const ProfileScreen(),
+    ];
+  }
+
+  void _refreshDashboard() {
+    _dashboardKey.currentState?.refreshDashboard();
+  }
 
   void _onItemSelected(int index) {
     setState(() {
@@ -33,10 +46,7 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: _screens[_selectedIndex],
       bottomNavigationBar: CustomBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemSelected: _onItemSelected,

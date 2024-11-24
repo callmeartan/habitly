@@ -8,7 +8,12 @@ import '../widgets/task_card.dart'; // Import the new TaskCard widget
 import 'dart:math' show max;
 
 class TasksScreen extends StatefulWidget {
-  const TasksScreen({Key? key}) : super(key: key);
+  final VoidCallback onTaskUpdated;
+
+  const TasksScreen({
+    Key? key,
+    required this.onTaskUpdated,
+  }) : super(key: key);
 
   @override
   State<TasksScreen> createState() => _TasksScreenState();

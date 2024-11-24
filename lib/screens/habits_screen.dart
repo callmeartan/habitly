@@ -9,7 +9,12 @@ import 'dart:math' show max;
 
 
 class HabitsScreen extends StatefulWidget {
-  const HabitsScreen({Key? key}) : super(key: key);
+  final VoidCallback onHabitUpdated;
+
+  const HabitsScreen({
+    Key? key,
+    required this.onHabitUpdated,
+  }) : super(key: key);
 
   @override
   State<HabitsScreen> createState() => _HabitsScreenState();
