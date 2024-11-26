@@ -97,29 +97,16 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
         isCompleted: !task.isCompleted,
       );
 
+      setState(() {
+        final index = _tasks.indexWhere((t) => t.id == task.id);
+        if (index != -1) {
+          _tasks[index] = updatedTask;
+        }
+      });
+
       await _taskRepository.updateTask(updatedTask);
-      await _loadTasks();
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updatedTask.isCompleted ? 'Task completed! 🎉' : 'Task marked as incomplete',
-            style: GoogleFonts.poppins(),
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update task: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await _loadTasks();
     }
   }
 
@@ -205,24 +192,19 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               reminder: reminder,
                             );
 
+                            setState(() {
+                              final index = _tasks.indexWhere((t) => t.id == task.id);
+                              if (index != -1) {
+                                _tasks[index] = updatedTask;
+                              }
+                            });
+
                             await _taskRepository.updateTask(updatedTask);
-                            await _loadTasks();
 
                             if (!mounted) return;
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Task updated successfully'),
-                              ),
-                            );
                           } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to update task: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            await _loadTasks();
                           }
                         }
                       },
@@ -336,27 +318,14 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               updatedAt: DateTime.now(),
                             );
 
-                            await _taskRepository.addTask(newTask);
+                            await _addTask(newTask);
                             await _loadTasks();
 
                             if (!mounted) return;
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Task added successfully')),
-                            );
                           } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to add task: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            // Handle error silently
                           }
-                        } else if (dueDate == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please set a due date')),
-                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -379,52 +348,34 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     );
   }
 
+  Future<void> _addTask(Task newTask) async {
+    try {
+      setState(() {
+        _tasks.add(newTask);
+      });
+
+      await _taskRepository.addTask(newTask);
+    } catch (e) {
+      setState(() {
+        _tasks.removeWhere((t) => t.id == newTask.id);
+      });
+      rethrow;
+    }
+  }
+
   Future<void> _deleteTask(int taskId) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Delete Task',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Are you sure you want to delete this task?',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Delete',
-              style: GoogleFonts.poppins(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
+    final taskToDelete = _tasks.firstWhere((t) => t.id == taskId);
 
-    if (shouldDelete ?? false) {
-      try {
-        await _taskRepository.deleteTask(taskId);
-        await _loadTasks();
+    try {
+      setState(() {
+        _tasks.removeWhere((t) => t.id == taskId);
+      });
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Task deleted successfully')),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete task: $e')),
-        );
-      }
+      await _taskRepository.deleteTask(taskId);
+    } catch (e) {
+      setState(() {
+        _tasks.add(taskToDelete);
+      });
     }
   }
 
