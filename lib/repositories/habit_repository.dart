@@ -21,16 +21,31 @@ class HabitRepository {
   }
 
   Future<List<Habit>> loadHabits() async {
-    final prefs = await SharedPreferences.getInstance();
-    final habitsString = prefs.getString(_key);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isOfflineMode = prefs.getBool('offline_mode') ?? true;
 
-    if (habitsString == null) return [];
+      // If online and user is signed in, prioritize cloud data
+      if (!isOfflineMode && _firebaseSyncService.isUserSignedIn) {
+        final cloudHabits = await _firebaseSyncService.fetchHabitsFromCloud();
+        // Save cloud data locally
+        final habitsJson = cloudHabits.map((habit) => habit.toJson()).toList();
+        await prefs.setString(_key, jsonEncode(habitsJson));
+        return cloudHabits;
+      }
 
-    final habitsList = jsonDecode(habitsString) as List;
-    return habitsList
-        .map((habitJson) => Habit.fromJson(habitJson))
-        .where((habit) => !habit.isDeleted)
-        .toList();
+      // Otherwise load local data
+      final habitsString = prefs.getString(_key);
+      if (habitsString == null) return [];
+
+      final habitsList = jsonDecode(habitsString) as List;
+      return habitsList
+          .map((habitJson) => Habit.fromJson(habitJson))
+          .where((habit) => !habit.isDeleted)
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to load habits: $e');
+    }
   }
 
   Future<void> clearHabits() async {

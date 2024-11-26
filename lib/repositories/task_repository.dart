@@ -23,14 +23,25 @@ class TaskRepository {
   Future<List<Task>> loadTasks() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final tasksString = prefs.getString(_key);
+      final isOfflineMode = prefs.getBool('offline_mode') ?? true;
 
+      // If online and user is signed in, prioritize cloud data
+      if (!isOfflineMode && _firebaseSyncService.isUserSignedIn) {
+        final cloudTasks = await _firebaseSyncService.fetchTasksFromCloud();
+        // Save cloud data locally
+        final tasksJson = cloudTasks.map((task) => task.toJson()).toList();
+        await prefs.setString(_key, jsonEncode(tasksJson));
+        return cloudTasks;
+      }
+
+      // Otherwise load local data
+      final tasksString = prefs.getString(_key);
       if (tasksString == null) return [];
 
       final tasksList = jsonDecode(tasksString) as List;
       return tasksList
           .map((taskJson) => Task.fromJson(taskJson))
-          .where((task) => !task.isDeleted)  // Filter out deleted tasks
+          .where((task) => !task.isDeleted)
           .toList();
     } catch (e) {
       throw Exception('Failed to load tasks: $e');

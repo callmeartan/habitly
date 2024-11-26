@@ -8,6 +8,8 @@ import 'package:habitly/firebase_options.dart';
 import 'package:habitly/screens/main_navigation_scaffold.dart';
 import 'package:habitly/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:habitly/repositories/task_repository.dart';
+import 'package:habitly/repositories/habit_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,13 +59,28 @@ class MyApp extends StatelessWidget {
 class AuthenticationWrapper extends StatelessWidget {
   const AuthenticationWrapper({Key? key}) : super(key: key);
 
+  Future<void> _loadUserData(String userId) async {
+    final taskRepo = TaskRepository();
+    final habitRepo = HabitRepository();
+
+    // Clear any existing local data first
+    await taskRepo.clearLocalData();
+    await habitRepo.clearLocalData();
+
+    // Load cloud data
+    await Future.wait([
+      taskRepo.syncWithCloud(),
+      habitRepo.syncWithCloud(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
       builder: (context, prefsSnapshot) {
         if (!prefsSnapshot.hasData) {
-          return const SizedBox.shrink(); // Return empty widget while loading
+          return const Center(child: CircularProgressIndicator());
         }
 
         final prefs = prefsSnapshot.data!;
@@ -71,31 +88,39 @@ class AuthenticationWrapper extends StatelessWidget {
         return StreamBuilder<User?>(
           stream: AuthService().authStateChanges,
           builder: (context, authSnapshot) {
+            // Handle initial loading state
+            if (authSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
             final isOfflineMode = prefs.getBool('offline_mode') ?? false;
             final lastLogoutTime = prefs.getInt('last_logout_timestamp');
             final installTime = prefs.getInt('install_timestamp');
 
-            // If this is a fresh install or reinstall
+            // Fresh install handling
             if (installTime == null) {
               prefs.setInt('install_timestamp', DateTime.now().millisecondsSinceEpoch);
               prefs.setBool('offline_mode', false);
               return const LoginScreen();
             }
 
-            // Check if offline mode is valid
+            // Check if user just logged in
+            if (authSnapshot.hasData && !isOfflineMode) {
+              // Load user data from cloud
+              _loadUserData(authSnapshot.data!.uid);
+            }
+
+            // Validate offline mode
             bool isValidOfflineMode = false;
             if (isOfflineMode && lastLogoutTime != null) {
               final lastLogout = DateTime.fromMillisecondsSinceEpoch(lastLogoutTime);
-              final now = DateTime.now();
-              isValidOfflineMode = now.difference(lastLogout).inDays <= 30;
+              isValidOfflineMode = DateTime.now().difference(lastLogout).inDays <= 30;
             }
 
-            // Show main navigation if user is either authenticated or in valid offline mode
             if (authSnapshot.hasData || isValidOfflineMode) {
               return const MainNavigationScaffold();
             }
 
-            // Default to login screen
             return const LoginScreen();
           },
         );
