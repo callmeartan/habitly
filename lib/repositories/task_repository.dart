@@ -5,6 +5,7 @@ import '../services/firebase_sync_service.dart';
 
 class TaskRepository {
   static const String _key = 'tasks';
+  static const String _offlineDataKey = 'has_offline_tasks_to_merge';
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
 
   Future<void> saveTasks(List<Task> tasks) async {
@@ -201,6 +202,53 @@ class TaskRepository {
       await saveTasks(cloudTasks);
     } catch (e) {
       throw Exception('Failed to sync tasks from cloud: $e');
+    }
+  }
+
+  Future<bool> hasLocalData() async {
+    try {
+      final tasks = await getAllTasks();
+      return tasks.isNotEmpty;
+    } catch (e) {
+      print('Error checking local task data: $e');
+      return false;
+    }
+  }
+
+  Future<void> prepareForLogin() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_offlineDataKey, true);
+    } catch (e) {
+      print('Error preparing tasks for login: $e');
+      throw Exception('Failed to prepare tasks for login: $e');
+    }
+  }
+
+  Future<void> clearLocalData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_key);
+      await prefs.remove(_offlineDataKey);
+    } catch (e) {
+      print('Error clearing local task data: $e');
+      throw Exception('Failed to clear local task data: $e');
+    }
+  }
+
+  Future<List<Task>> getAllTasks() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final tasksString = prefs.getString(_key);
+
+      if (tasksString == null) return [];
+
+      final tasksList = jsonDecode(tasksString) as List;
+      return tasksList
+          .map((taskJson) => Task.fromJson(taskJson))
+          .toList(); // Note: This returns all tasks, including deleted ones
+    } catch (e) {
+      throw Exception('Failed to load tasks: $e');
     }
   }
 }

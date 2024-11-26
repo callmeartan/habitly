@@ -14,6 +14,8 @@ import '../services/firebase_sync_service.dart';
 import '../repositories/habit_repository.dart';
 import '../repositories/task_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:habitly/repositories/task_repository.dart' show TaskRepository;
+import 'package:habitly/repositories/habit_repository.dart' show HabitRepository;
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onRefresh;
@@ -425,6 +427,297 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     );
   }
 
+  Future<void> _showLogoutConfirmation() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(
+            'Confirm Logout',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Before logging out:',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Any unsaved data will be lost',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.sync_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Consider syncing your data first',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _syncData();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Sync Data First',
+                    style: GoogleFonts.poppins(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleSignOut();
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Logout Anyway',
+                    style: GoogleFonts.poppins(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleLoginTransition() async {
+    // Check if there's existing offline data
+    final hasOfflineData = await Future.wait([
+      _habitRepository.hasLocalData(),
+      _taskRepository.hasLocalData(),
+    ]).then((results) => results.any((hasData) => hasData));
+
+    if (!mounted) return;
+
+    // Show a detailed confirmation dialog if there's offline data
+    final shouldProceed = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        bool shouldMergeData = true; // Default to merging data
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(
+            hasOfflineData ? 'Existing Data Found' : 'Switch to Online Mode',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasOfflineData) ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'You have existing offline data',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StatefulBuilder(
+                  builder: (context, setState) => CheckboxListTile(
+                    value: shouldMergeData,
+                    onChanged: (value) {
+                      setState(() => shouldMergeData = value ?? true);
+                    },
+                    title: Text(
+                      'Keep my existing data',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    subtitle: Text(
+                      'Your offline data will be merged with your cloud account',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (!shouldMergeData)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Theme.of(context).colorScheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Your offline data will be permanently deleted',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ] else ...[
+                Text(
+                  'Would you like to sign in to access cloud features?',
+                  style: GoogleFonts.poppins(),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Sync your data across devices',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(
+                context,
+                {'proceed': true, 'mergeData': shouldMergeData},
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Continue',
+                style: GoogleFonts.poppins(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldProceed != null && shouldProceed['proceed'] == true && mounted) {
+      if (hasOfflineData && shouldProceed['mergeData']) {
+        // Save offline data before transitioning
+        await _habitRepository.prepareForLogin();
+        await _taskRepository.prepareForLogin();
+      } else if (hasOfflineData) {
+        // Clear offline data if user chose not to merge
+        await _habitRepository.clearLocalData();
+        await _taskRepository.clearLocalData();
+      }
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -537,6 +830,26 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               color: colorScheme.onBackground.withOpacity(0.6),
                             ),
                           ),
+                          IconButton(
+                            icon: Icon(
+                              _isOfflineMode ? Icons.login_rounded : Icons.logout_rounded,
+                              color: _isOfflineMode
+                                  ? colorScheme.primary.withOpacity(0.8)
+                                  : colorScheme.error.withOpacity(0.8),
+                              size: 20,
+                            ),
+                            onPressed: _isOfflineMode
+                                ? () {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginScreen()
+                                ),
+                                    (route) => false,
+                              );
+                            }
+                                : _showLogoutConfirmation,
+                            tooltip: _isOfflineMode ? 'Login' : 'Logout',
+                          ),
                         ],
                       ),
                     ),
@@ -610,30 +923,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               onTap: _showHelpSupport,
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-
-                    // Sign Out Button
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: ElevatedButton(
-                        onPressed: _handleSignOut,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.error,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          minimumSize: const Size(double.infinity, 0),
-                        ),
-                        child: Text(
-                          'Log Out',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.onError,
-                          ),
                         ),
                       ),
                     ),

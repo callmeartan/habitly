@@ -25,8 +25,8 @@ class HabitDashboard extends StatefulWidget {
 }
 
 class HabitDashboardState extends State<HabitDashboard> {
-  final _habitRepository = HabitRepository();
-  final _taskRepository = TaskRepository();
+  final HabitRepository _habitRepository = HabitRepository();
+  final TaskRepository _taskRepository = TaskRepository();
   final NotificationService _notificationService = NotificationService();
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
   List<Habit> habits = [];

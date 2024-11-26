@@ -5,6 +5,7 @@ import '../services/firebase_sync_service.dart';
 
 class HabitRepository {
   static const String _key = 'habits';
+  static const String _offlineDataKey = 'has_offline_habits_to_merge';
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
 
   Future<void> saveHabits(List<Habit> habits) async {
@@ -58,6 +59,53 @@ class HabitRepository {
         updatedAt: DateTime.now(),
       );
       await saveHabits(habits);
+    }
+  }
+
+  Future<bool> hasLocalData() async {
+    try {
+      final habits = await getAllHabits();
+      return habits.isNotEmpty;
+    } catch (e) {
+      print('Error checking local habit data: $e');
+      return false;
+    }
+  }
+
+  Future<void> prepareForLogin() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_offlineDataKey, true);
+    } catch (e) {
+      print('Error preparing habits for login: $e');
+      throw Exception('Failed to prepare habits for login: $e');
+    }
+  }
+
+  Future<void> clearLocalData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_key);
+      await prefs.remove(_offlineDataKey);
+    } catch (e) {
+      print('Error clearing local habit data: $e');
+      throw Exception('Failed to clear local habit data: $e');
+    }
+  }
+
+  Future<List<Habit>> getAllHabits() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final habitsString = prefs.getString(_key);
+
+      if (habitsString == null) return [];
+
+      final habitsList = jsonDecode(habitsString) as List;
+      return habitsList
+          .map((habitJson) => Habit.fromJson(habitJson))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to load habits: $e');
     }
   }
 }
