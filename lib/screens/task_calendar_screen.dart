@@ -255,35 +255,51 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                     holidayTextStyle: TextStyle(color: colorScheme.onSurface),
                   ),
                   calendarBuilders: CalendarBuilders(
-                    markerBuilder: (context, date, events) {
+                    defaultBuilder: (context, date, _) {
                       final tasks = _getTasksForDay(date);
+                      final isSelected = isSameDay(date, _selectedDay);
+                      final isToday = isSameDay(date, DateTime.now());
+
+                      // Get highest priority for the day
+                      String highestPriority = 'low';
                       if (tasks.isNotEmpty) {
-                        final highestPriority = _getHighestPriority(tasks);
-                        return Positioned(
-                          bottom: 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _getPriorityColor(highestPriority).withOpacity(0.8),
-                            ),
-                            width: 35,
-                            height: 35,
-                            child: Center(
-                              child: Text(
-                                date.day.toString(),
-                                style: TextStyle(
-                                  color: highestPriority == 'medium'
-                                      ? Colors.black
-                                      : colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                        highestPriority = _getHighestPriority(tasks);
+                      }
+
+                      // Determine background color
+                      Color? backgroundColor;
+                      if (isSelected) {
+                        backgroundColor = colorScheme.primary;
+                      } else if (tasks.isNotEmpty) {
+                        backgroundColor = _getPriorityColor(highestPriority).withOpacity(0.2);
+                      } else if (isToday) {
+                        backgroundColor = colorScheme.primary.withOpacity(0.1);
+                      }
+
+                      return Container(
+                        margin: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: backgroundColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${date.day}',
+                            style: GoogleFonts.poppins(
+                              color: isSelected
+                                  ? colorScheme.onPrimary
+                                  : colorScheme.onSurface,
+                              fontWeight: isSelected || isToday
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
-                        );
-                      }
-                      return null;
+                        ),
+                      );
                     },
+                    // Remove the markerBuilder since we're handling indicators 
+                    // in the defaultBuilder
+                    markerBuilder: null,
                   ),
                 ),
               ),
