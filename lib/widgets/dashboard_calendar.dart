@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/task.dart';
+import '../screens/task_calendar_screen.dart';
 
 class DashboardCalendar extends StatelessWidget {
   final List<Task> tasks;
@@ -88,7 +89,19 @@ class DashboardCalendar extends StatelessWidget {
               }
 
               return GestureDetector(
-                onTap: () => onDateSelected(date),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TaskCalendarScreen(
+                        tasks: tasks,
+                        onTaskAdded: (Task newTask) {
+                          // Handle adding the new task
+                        },
+                      ),
+                    ),
+                  );
+                },
                 child: Container(
                   width: 40,
                   height: 40,
