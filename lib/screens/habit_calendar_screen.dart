@@ -61,154 +61,187 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: theme.primaryColor,
+        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.habit.name,
               style: GoogleFonts.poppins(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: theme.primaryTextTheme.titleLarge?.color,
               ),
             ),
-            Text(
-              'Calendar View',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: theme.primaryTextTheme.titleLarge?.color?.withAlpha(204),
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: theme.primaryTextTheme.titleLarge?.color?.withAlpha(204),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Progress Tracker',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: theme.primaryTextTheme.titleLarge?.color?.withAlpha(204),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Card(
-            margin: const EdgeInsets.all(8.0),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TableCalendar(
-                firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                lastDay: DateTime.now().add(const Duration(days: 365)),
-                focusedDay: _focusedDay,
-                calendarFormat: _calendarFormat,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                calendarStyle: CalendarStyle(
-                  outsideDaysVisible: false,
-                  weekendTextStyle: TextStyle(color: colorScheme.onSurface),
-                  holidayTextStyle: TextStyle(color: colorScheme.onSurface),
-                  selectedDecoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    shape: BoxShape.circle,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Card(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TableCalendar(
+                  firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDay: DateTime.now().add(const Duration(days: 365)),
+                  focusedDay: _focusedDay,
+                  calendarFormat: _calendarFormat,
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                  onFormatChanged: (format) {
+                    setState(() {
+                      _calendarFormat = format;
+                    });
+                  },
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    weekendTextStyle: TextStyle(color: colorScheme.onSurface),
+                    holidayTextStyle: TextStyle(color: colorScheme.onSurface),
+                    selectedDecoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: colorScheme.primary.withAlpha(128),
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  todayDecoration: BoxDecoration(
-                    color: colorScheme.primary.withAlpha(128),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, date, events) {
-                    if (_isDateCompleted(date)) {
-                      return Center(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colorScheme.primary,
-                          ),
-                          width: 35,
-                          height: 35,
-                          child: Center(
-                            child: Text(
-                              date.day.toString(),
-                              style: TextStyle(
-                                color: colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
+                  calendarBuilders: CalendarBuilders(
+                    markerBuilder: (context, date, events) {
+                      if (_isDateCompleted(date)) {
+                        return Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colorScheme.primary,
+                            ),
+                            width: 35,
+                            height: 35,
+                            child: Center(
+                              child: Text(
+                                date.day.toString(),
+                                style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }
-                    return null;
-                  },
+                        );
+                      }
+                      return null;
+                    },
+                  ),
+                  headerStyle: HeaderStyle(
+                    titleTextStyle: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                    formatButtonDecoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    formatButtonTextStyle: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          _buildStats(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStats() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final totalDays = widget.habit.completionDates.length;
-    final currentStreak = _calculateCurrentStreak();
-    final bestStreak = _calculateBestStreak();
-    final completionRate = totalDays > 0
-        ? (totalDays / widget.habit.completionDates.length * 100).toStringAsFixed(1)
-        : '0';
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Text(
-            'Statistics',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Your Progress',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      Icon(
+                        Icons.insights,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard(
+                        'Streak',
+                        _calculateCurrentStreak().toString(),
+                        Icons.local_fire_department,
+                        theme,
+                        Colors.orange,
+                      ),
+                      _buildStatCard(
+                        'Best Streak',
+                        _calculateBestStreak().toString(),
+                        Icons.emoji_events,
+                        theme,
+                        Colors.amber,
+                      ),
+                      _buildStatCard(
+                        'Total Days',
+                        widget.habit.completionDates.length.toString(),
+                        Icons.calendar_today,
+                        theme,
+                        Colors.blue,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatCard(
-                'Current Streak',
-                currentStreak.toString(),
-                Icons.local_fire_department,
-                theme,
-                Colors.orange,
-              ),
-              _buildStatCard(
-                'Best Streak',
-                bestStreak.toString(),
-                Icons.emoji_events,
-                theme,
-                Colors.amber,
-              ),
-              _buildStatCard(
-                'Total Days',
-                totalDays.toString(),
-                Icons.calendar_today,
-                theme,
-                Colors.blue,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -221,22 +254,17 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
       Color color,
       ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      width: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.poppins(
@@ -247,9 +275,11 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
           ),
           Text(
             label,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: theme.textTheme.bodySmall?.color?.withAlpha(179),
+              fontWeight: FontWeight.w500,
+              color: theme.textTheme.bodyMedium?.color,
             ),
           ),
         ],
