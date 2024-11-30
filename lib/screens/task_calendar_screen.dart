@@ -138,6 +138,47 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
     );
   }
 
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.yellow;
+      case 'low':
+      default:
+        return Colors.green;
+    }
+  }
+
+  String _getHighestPriority(List<Task> tasks) {
+    if (tasks.any((task) => task.priority.toLowerCase() == 'high')) {
+      return 'high';
+    } else if (tasks.any((task) => task.priority.toLowerCase() == 'medium')) {
+      return 'medium';
+    }
+    return 'low';
+  }
+
+  int _getMonthlyTaskCount() {
+    return widget.tasks.where((task) =>
+    task.dueDate.year == _focusedDay.year &&
+        task.dueDate.month == _focusedDay.month).length;
+  }
+
+  int _getHighPriorityTaskCount() {
+    return widget.tasks.where((task) =>
+    task.dueDate.year == _focusedDay.year &&
+        task.dueDate.month == _focusedDay.month &&
+        task.priority.toLowerCase() == 'high').length;
+  }
+
+  int _getUpcomingWeekTaskCount() {
+    final weekFromNow = DateTime.now().add(const Duration(days: 7));
+    return widget.tasks.where((task) =>
+    task.dueDate.isAfter(DateTime.now()) &&
+        task.dueDate.isBefore(weekFromNow)).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -217,12 +258,13 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                     markerBuilder: (context, date, events) {
                       final tasks = _getTasksForDay(date);
                       if (tasks.isNotEmpty) {
+                        final highestPriority = _getHighestPriority(tasks);
                         return Positioned(
                           bottom: 1,
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: colorScheme.primary,
+                              color: _getPriorityColor(highestPriority).withOpacity(0.8),
                             ),
                             width: 35,
                             height: 35,
@@ -230,7 +272,9 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                               child: Text(
                                 date.day.toString(),
                                 style: TextStyle(
-                                  color: colorScheme.onPrimary,
+                                  color: highestPriority == 'medium'
+                                      ? Colors.black
+                                      : colorScheme.onPrimary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -244,6 +288,71 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                 ),
               ),
             ),
+
+            // Stats Container
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Task Overview',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      Icon(
+                        Icons.analytics_outlined,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard(
+                        'Monthly Tasks',
+                        _getMonthlyTaskCount().toString(),
+                        Icons.calendar_month,
+                        theme,
+                        Colors.blue,
+                      ),
+                      _buildStatCard(
+                        'High Priority',
+                        _getHighPriorityTaskCount().toString(),
+                        Icons.priority_high,
+                        theme,
+                        Colors.red,
+                      ),
+                      _buildStatCard(
+                        'This Week',
+                        _getUpcomingWeekTaskCount().toString(),
+                        Icons.upcoming,
+                        theme,
+                        Colors.green,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -251,6 +360,47 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
         onPressed: () => _showAddTaskDialog(_selectedDay),
         backgroundColor: colorScheme.primary,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+      String label,
+      String value,
+      IconData icon,
+      ThemeData theme,
+      Color color,
+      ) {
+    return Container(
+      width: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: theme.textTheme.bodyMedium?.color,
+            ),
+          ),
+        ],
       ),
     );
   }
