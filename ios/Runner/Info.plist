@@ -81,5 +81,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dev.artan.habitly.refresh</string>
+		<string>dev.artan.habitly.processing</string>
+	</array>
 </dict>
 </plist>

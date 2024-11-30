@@ -87,7 +87,7 @@ class HabitCard extends StatelessWidget {
                       icon: Icon(
                         Icons.delete,
                         size: 20,
-                        color: Colors.red[400],
+                        color: Colors.red[300]
                       ),
                       onPressed: onDelete,
                     ),
