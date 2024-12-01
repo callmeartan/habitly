@@ -44,8 +44,8 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
-      'Reminder',
-      'Time to complete: $habitName',
+      'Time for your habit!',
+      'Ready to work on: $habitName?',
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -79,7 +79,7 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       'Task Reminder',
-      'Due soon: $taskTitle',
+      '📝 "$taskTitle" Due soon',
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
