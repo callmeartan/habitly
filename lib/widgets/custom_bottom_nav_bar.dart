@@ -14,7 +14,8 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final progressColor = isDark ? Colors.white : Colors.black;
 
     return Container(
       decoration: BoxDecoration(
@@ -25,17 +26,18 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: theme.shadowColor.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: SafeArea(
-        child: SizedBox(
-          height: 60, // Reduced height
+        child: Container(
+          height: 65,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavBarItem(
                 icon: Icons.home_outlined,
@@ -43,7 +45,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: 'Home',
                 isSelected: selectedIndex == 0,
                 onTap: () => onItemSelected(0),
-                colorScheme: colorScheme,
+                progressColor: progressColor,
               ),
               _NavBarItem(
                 icon: Icons.track_changes_outlined,
@@ -51,7 +53,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: 'Habits',
                 isSelected: selectedIndex == 1,
                 onTap: () => onItemSelected(1),
-                colorScheme: colorScheme,
+                progressColor: progressColor,
               ),
               _NavBarItem(
                 icon: Icons.task_outlined,
@@ -59,7 +61,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: 'Tasks',
                 isSelected: selectedIndex == 2,
                 onTap: () => onItemSelected(2),
-                colorScheme: colorScheme,
+                progressColor: progressColor,
               ),
               _NavBarItem(
                 icon: Icons.person_outline_rounded,
@@ -67,7 +69,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 label: 'Profile',
                 isSelected: selectedIndex == 3,
                 onTap: () => onItemSelected(3),
-                colorScheme: colorScheme,
+                progressColor: progressColor,
               ),
             ],
           ),
@@ -83,7 +85,7 @@ class _NavBarItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final ColorScheme colorScheme;
+  final Color progressColor;
 
   const _NavBarItem({
     required this.icon,
@@ -91,51 +93,51 @@ class _NavBarItem extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
-    required this.colorScheme,
+    required this.progressColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: RoundedRectangleBorder(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: SizedBox(
-        width: 70,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return ScaleTransition(
-                  scale: animation,
-                  child: child,
-                );
-              },
-              child: Icon(
-                isSelected ? selectedIcon : icon,
-                key: ValueKey(isSelected),
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurface.withOpacity(0.64),
-                size: 24, // Slightly reduced icon size
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? progressColor.withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: child,
+                  );
+                },
+                child: Icon(
+                  isSelected ? selectedIcon : icon,
+                  key: ValueKey(isSelected),
+                  color: progressColor.withOpacity(isSelected ? 1 : 0.5),
+                  size: 24,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 11, // Slightly reduced font size
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurface.withOpacity(0.64),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: progressColor.withOpacity(isSelected ? 1 : 0.5),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
