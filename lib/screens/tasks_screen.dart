@@ -26,6 +26,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   List<Task> _tasks = [];
   bool _isLoading = true;
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -53,19 +54,26 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   }
 
   Widget _buildTaskList(List<Task> tasks, Color progressColor) {
-    if (tasks.isEmpty) {
+    final filteredTasks = tasks.where((task) {
+      if (_searchQuery.isEmpty) return true;
+      return task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          task.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          task.category.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    if (filteredTasks.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.task_outlined,
+              _searchQuery.isEmpty ? Icons.task_outlined : Icons.search_off,
               size: 64,
               color: progressColor.withOpacity(0.2),
             ),
             const SizedBox(height: 16),
             Text(
-              'No tasks yet',
+              _searchQuery.isEmpty ? 'No tasks yet' : 'No matching tasks found',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 color: progressColor.withOpacity(0.5),
@@ -78,9 +86,9 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 
     return ListView.builder(
       padding: const EdgeInsets.all(20),
-      itemCount: tasks.length,
+      itemCount: filteredTasks.length,
       itemBuilder: (context, index) {
-        final task = tasks[index];
+        final task = filteredTasks[index];
         return TaskCard(
           task: task,
           onToggleComplete: () => _toggleTaskCompletion(task),
@@ -543,6 +551,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
         style: GoogleFonts.poppins(
           color: progressColor,
         ),
+        onChanged: (value) => setState(() => _searchQuery = value),
         decoration: InputDecoration(
           hintText: 'Search tasks...',
           hintStyle: GoogleFonts.poppins(
@@ -552,6 +561,15 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
             Icons.search,
             color: progressColor.withOpacity(0.5),
           ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: progressColor.withOpacity(0.5),
+                  ),
+                  onPressed: () => setState(() => _searchQuery = ''),
+                )
+              : null,
           filled: true,
           fillColor: progressColor.withOpacity(0.05),
           border: OutlineInputBorder(
