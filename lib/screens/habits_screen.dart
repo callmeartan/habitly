@@ -193,23 +193,32 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final progressColor = isDark ? Colors.white : Colors.black;
 
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(colorScheme),
-            _buildTabBar(colorScheme),
+            _buildHeader(progressColor),
+            _buildTabBar(theme, progressColor),
+            _buildSearchBar(theme, progressColor),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildHabitsList(_habits, colorScheme),
+                  _buildHabitsList(_habits, progressColor),
                   _buildHabitsList(
                     _habits.where((habit) => habit.completedToday).toList(),
-                    colorScheme,
+                    progressColor,
                   ),
                 ],
               ),
@@ -217,19 +226,17 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddHabitDialog,
-        backgroundColor: colorScheme.primary,
-        icon: const Icon(Icons.add),
-        label: Text(
-          'New Habit',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        child: Icon(
+          Icons.add,
+          color: progressColor,
         ),
       ),
     );
   }
 
-  Widget _buildHeader(ColorScheme colorScheme) {
+  Widget _buildHeader(Color progressColor) {
     final completedToday = _habits.where((h) => h.completedToday).length;
     final totalHabits = _habits.length;
 
@@ -246,42 +253,34 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                 style: GoogleFonts.poppins(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onBackground,
+                  color: progressColor,
                 ),
               ),
               Text(
                 DateFormat('MMMM d, yyyy').format(DateTime.now()),
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: colorScheme.onBackground.withOpacity(0.6),
+                  color: progressColor.withOpacity(0.7),
                 ),
               ),
             ],
           ),
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
             ),
-            child: Column(
-              children: [
-                Text(
-                  '$completedToday/$totalHabits',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  'Completed',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
+            decoration: BoxDecoration(
+              color: progressColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '$completedToday/$totalHabits completed',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: progressColor,
+              ),
             ),
           ),
         ],
@@ -289,24 +288,37 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildTabBar(ColorScheme colorScheme) {
+  Widget _buildTabBar(ThemeData theme, Color progressColor) {
     return Container(
+      height: 48,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+        color: progressColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
         controller: _tabController,
-        labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
+        labelStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        labelColor: progressColor,
+        unselectedLabelColor: progressColor.withOpacity(0.5),
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          color: colorScheme.primaryContainer.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(16),
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         tabs: const [
           Tab(text: 'All'),
@@ -315,7 +327,45 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       ),
     );
   }
-  Widget _buildHabitsList(List<Habit> habits, ColorScheme colorScheme) {
+
+  Widget _buildSearchBar(ThemeData theme, Color progressColor) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: TextField(
+        style: GoogleFonts.poppins(
+          color: progressColor,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search habits...',
+          hintStyle: GoogleFonts.poppins(
+            color: progressColor.withOpacity(0.5),
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: progressColor.withOpacity(0.5),
+          ),
+          filled: true,
+          fillColor: progressColor.withOpacity(0.05),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: progressColor.withOpacity(0.1),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHabitsList(List<Habit> habits, Color progressColor) {
     if (habits.isEmpty) {
       return Center(
         child: Column(
@@ -324,14 +374,14 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             Icon(
               Icons.track_changes_outlined,
               size: 64,
-              color: colorScheme.onBackground.withOpacity(0.2),
+              color: progressColor.withOpacity(0.2),
             ),
             const SizedBox(height: 16),
             Text(
               'No habits yet',
               style: GoogleFonts.poppins(
                 fontSize: 18,
-                color: colorScheme.onBackground.withOpacity(0.5),
+                color: progressColor.withOpacity(0.5),
               ),
             ),
           ],

@@ -721,7 +721,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final progressColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       body: SafeArea(
@@ -734,22 +735,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    Container(
+                    Padding(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            colorScheme.primary.withOpacity(0.2),
-                            colorScheme.primary.withOpacity(0.05),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(30),
-                          bottomRight: Radius.circular(30),
-                        ),
-                      ),
                       child: Column(
                         children: [
                           Row(
@@ -759,60 +746,62 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                 style: GoogleFonts.poppins(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: colorScheme.onBackground,
+                                  color: progressColor,
                                 ),
                               ),
                               const Spacer(),
                               IconButton(
                                 icon: Icon(
                                   Icons.edit,
-                                  color: colorScheme.primary,
+                                  color: progressColor.withOpacity(0.7),
                                 ),
                                 onPressed: _editProfile,
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
-                          Stack(
-                            children: [
-                              GestureDetector(
-                                onTap: _pickImage,
-                                child: Stack(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor: colorScheme.primary.withOpacity(0.2),
-                                      backgroundImage: _imagePath != null
-                                          ? FileImage(File(_imagePath!))
-                                          : null,
-                                      child: _imagePath == null
-                                          ? Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: colorScheme.primary,
-                                      )
-                                          : null,
-                                    ),
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme.primary,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.photo_library,
-                                          size: 20,
-                                          color: colorScheme.onPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: progressColor.withOpacity(0.1),
+                                  backgroundImage: _imagePath != null
+                                      ? FileImage(File(_imagePath!))
+                                      : null,
+                                  child: _imagePath == null
+                                      ? Icon(
+                                          Icons.person,
+                                          size: 60,
+                                          color: progressColor.withOpacity(0.7),
+                                        )
+                                      : null,
                                 ),
-                              ),
-                            ],
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: theme.cardColor,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: theme.shadowColor.withOpacity(0.1),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      size: 20,
+                                      color: progressColor.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -820,112 +809,21 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                             style: GoogleFonts.poppins(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
-                              color: colorScheme.onBackground,
+                              color: progressColor,
                             ),
                           ),
                           Text(
-                            _isOfflineMode ? 'Offline Mode' : 'Apple Sign In',
+                            _isOfflineMode ? 'Offline Mode' : 'Online Account',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: colorScheme.onBackground.withOpacity(0.6),
+                              color: progressColor.withOpacity(0.7),
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              _isOfflineMode ? Icons.login_rounded : Icons.logout_rounded,
-                              color: _isOfflineMode
-                                  ? colorScheme.primary.withOpacity(0.8)
-                                  : colorScheme.error.withOpacity(0.8),
-                              size: 20,
-                            ),
-                            onPressed: _isOfflineMode
-                                ? () {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen()
-                                ),
-                                    (route) => false,
-                              );
-                            }
-                                : _showLogoutConfirmation,
-                            tooltip: _isOfflineMode ? 'Login' : 'Logout',
                           ),
                         ],
                       ),
                     ),
-
-                    Hero(
-                      tag: 'settings_section',
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Settings',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onBackground,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildSettingsTile(
-                              icon: Icons.notifications,
-                              title: 'Notifications',
-                              subtitle: 'Enable push notifications',
-                              trailing: Switch(
-                                value: _notificationsEnabled,
-                                onChanged: _toggleNotifications,
-                              ),
-                              colorScheme: colorScheme,
-                            ),
-                            _buildSettingsTile(
-                              icon: Icons.dark_mode,
-                              title: 'Dark Mode',
-                              subtitle: 'Toggle dark theme',
-                              trailing: Switch(
-                                value: _darkModeEnabled,
-                                onChanged: _toggleDarkMode,
-                              ),
-                              colorScheme: colorScheme,
-                            ),
-                            _buildSettingsTile(
-                              icon: Icons.sync,
-                              title: 'Sync Data',
-                              subtitle: 'Backup and sync your data to cloud',
-                              trailing: _isSyncing
-                                  ? RotationTransition(
-                                turns: _syncAnimationController,
-                                child: Icon(
-                                  Icons.sync,
-                                  color: colorScheme.primary,
-                                ),
-                              )
-                                  : Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: colorScheme.onBackground.withOpacity(0.5),
-                              ),
-                              colorScheme: colorScheme,
-                              onTap: _isSyncing ? null : _syncData,
-                            ),
-                            _buildSettingsTile(
-                              icon: Icons.help_outline,
-                              title: 'Help & Support',
-                              subtitle: 'Get help using Habitly',
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: colorScheme.onBackground.withOpacity(0.5),
-                              ),
-                              colorScheme: colorScheme,
-                              onTap: _showHelpSupport,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 20),
+                    _buildSettingsSection(theme, progressColor),
                   ],
                 ),
               ),
@@ -936,64 +834,139 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Widget trailing,
-    required ColorScheme colorScheme,
-    VoidCallback? onTap,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildSettingsSection(ThemeData theme, Color progressColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: progressColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSettingCard(
+            theme,
+            progressColor,
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            trailing: Switch(
+              value: _notificationsEnabled,
+              onChanged: _toggleNotifications,
+            ),
+          ),
+          _buildSettingCard(
+            theme,
+            progressColor,
+            icon: Icons.dark_mode_outlined,
+            title: 'Dark Mode',
+            trailing: Switch(
+              value: _darkModeEnabled,
+              onChanged: _toggleDarkMode,
+            ),
+          ),
+          _buildSettingCard(
+            theme,
+            progressColor,
+            icon: Icons.sync_outlined,
+            title: 'Sync Data',
+            onTap: _syncData,
+            trailing: _isSyncing
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    ),
+                  )
+                : Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: progressColor.withOpacity(0.5),
+                  ),
+          ),
+          _buildSettingCard(
+            theme,
+            progressColor,
+            icon: Icons.help_outline,
+            title: 'Help & Support',
+            onTap: _showHelpSupport,
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: progressColor.withOpacity(0.5),
+            ),
+          ),
+          _buildSettingCard(
+            theme,
+            progressColor,
+            icon: _isOfflineMode ? Icons.login_outlined : Icons.logout_outlined,
+            title: _isOfflineMode ? 'Sign In' : 'Sign Out',
+            onTap: _isOfflineMode ? _handleLoginTransition : _showLogoutConfirmation,
+            isDestructive: !_isOfflineMode,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingCard(
+    ThemeData theme,
+    Color progressColor, {
+    required IconData icon,
+    required String title,
+    VoidCallback? onTap,
+    Widget? trailing,
+    bool isDestructive = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap?.call();
-          },
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: colorScheme.primary,
-                size: 24,
-              ),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            title: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w500,
-              ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isDestructive 
+                      ? theme.colorScheme.error 
+                      : progressColor.withOpacity(0.7),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: isDestructive 
+                          ? theme.colorScheme.error 
+                          : progressColor,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing,
+              ],
             ),
-            subtitle: Text(
-              subtitle,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            trailing: trailing,
-            onTap: onTap,
           ),
         ),
       ),

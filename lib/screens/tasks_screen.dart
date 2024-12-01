@@ -52,7 +52,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     }
   }
 
-  Widget _buildTaskList(List<Task> tasks, ColorScheme colorScheme) {
+  Widget _buildTaskList(List<Task> tasks, Color progressColor) {
     if (tasks.isEmpty) {
       return Center(
         child: Column(
@@ -61,14 +61,14 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
             Icon(
               Icons.task_outlined,
               size: 64,
-              color: colorScheme.onBackground.withOpacity(0.2),
+              color: progressColor.withOpacity(0.2),
             ),
             const SizedBox(height: 16),
             Text(
               'No tasks yet',
               style: GoogleFonts.poppins(
                 fontSize: 18,
-                color: colorScheme.onBackground.withOpacity(0.5),
+                color: progressColor.withOpacity(0.5),
               ),
             ),
           ],
@@ -379,30 +379,31 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     }
   }
 
-  Widget _buildAllTasksList(ColorScheme colorScheme) {
-    return _buildTaskList(_tasks, colorScheme);
+  Widget _buildAllTasksList(Color progressColor) {
+    return _buildTaskList(_tasks, progressColor);
   }
 
-  Widget _buildTodayTasksList(ColorScheme colorScheme) {
+  Widget _buildTodayTasksList(Color progressColor) {
     final todayTasks = _tasks.where((task) {
       final today = DateTime.now();
       return task.dueDate.year == today.year &&
           task.dueDate.month == today.month &&
           task.dueDate.day == today.day;
     }).toList();
-    return _buildTaskList(todayTasks, colorScheme);
+    return _buildTaskList(todayTasks, progressColor);
   }
 
-  Widget _buildUpcomingTasksList(ColorScheme colorScheme) {
+  Widget _buildUpcomingTasksList(Color progressColor) {
     final today = DateTime.now();
     final upcomingTasks = _tasks.where((task) => task.dueDate.isAfter(today)).toList();
-    return _buildTaskList(upcomingTasks, colorScheme);
+    return _buildTaskList(upcomingTasks, progressColor);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final progressColor = isDark ? Colors.white : Colors.black;
 
     if (_isLoading) {
       return const Scaffold(
@@ -416,35 +417,33 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(colorScheme),
-            _buildTabBar(colorScheme),
-            _buildSearchBar(colorScheme),
+            _buildHeader(progressColor),
+            _buildTabBar(theme, progressColor),
+            _buildSearchBar(theme, progressColor),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildAllTasksList(colorScheme),
-                  _buildTodayTasksList(colorScheme),
-                  _buildUpcomingTasksList(colorScheme),
+                  _buildAllTasksList(progressColor),
+                  _buildTodayTasksList(progressColor),
+                  _buildUpcomingTasksList(progressColor),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddTaskDialog,
-        backgroundColor: colorScheme.primary,
-        icon: const Icon(Icons.add),
-        label: Text(
-          'New Task',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        child: Icon(
+          Icons.add,
+          color: progressColor,
         ),
       ),
     );
   }
 
-  Widget _buildHeader(ColorScheme colorScheme) {
+  Widget _buildHeader(Color progressColor) {
     final completedTasks = _tasks.where((task) => task.isCompleted).length;
     final totalTasks = _tasks.length;
 
@@ -461,42 +460,34 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                 style: GoogleFonts.poppins(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onBackground,
+                  color: progressColor,
                 ),
               ),
               Text(
                 DateFormat('MMMM d, yyyy').format(DateTime.now()),
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: colorScheme.onBackground.withOpacity(0.6),
+                  color: progressColor.withOpacity(0.7),
                 ),
               ),
             ],
           ),
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
             ),
-            child: Column(
-              children: [
-                Text(
-                  '$completedTasks/$totalTasks',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  'Completed',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
+            decoration: BoxDecoration(
+              color: progressColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '$completedTasks/$totalTasks completed',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: progressColor,
+              ),
             ),
           ),
         ],
@@ -504,24 +495,37 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildTabBar(ColorScheme colorScheme) {
+  Widget _buildTabBar(ThemeData theme, Color progressColor) {
     return Container(
+      height: 48,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+        color: progressColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
         controller: _tabController,
-        labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
+        labelStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        labelColor: progressColor,
+        unselectedLabelColor: progressColor.withOpacity(0.5),
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          color: colorScheme.primaryContainer.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(16),
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         tabs: const [
           Tab(text: 'All'),
@@ -532,32 +536,37 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildSearchBar(ColorScheme colorScheme) {
+  Widget _buildSearchBar(ThemeData theme, Color progressColor) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: TextField(
+        style: GoogleFonts.poppins(
+          color: progressColor,
+        ),
         decoration: InputDecoration(
           hintText: 'Search tasks...',
           hintStyle: GoogleFonts.poppins(
-            color: colorScheme.onSurface.withOpacity(0.5),
+            color: progressColor.withOpacity(0.5),
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: colorScheme.onSurface.withOpacity(0.5),
+            color: progressColor.withOpacity(0.5),
           ),
           filled: true,
-          fillColor: colorScheme.surface,
+          fillColor: progressColor.withOpacity(0.05),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.1)),
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.1)),
+            borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: colorScheme.primary),
+            borderSide: BorderSide(
+              color: progressColor.withOpacity(0.1),
+            ),
           ),
         ),
       ),

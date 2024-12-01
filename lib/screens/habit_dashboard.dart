@@ -585,33 +585,7 @@ class HabitDashboardState extends State<HabitDashboard> {
                     const SizedBox(height: 16),
                     StreakOverview(habits: habits),
                     const SizedBox(height: 16),
-                    Text(
-                      'Active Habits',
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                   ],
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.only(bottom: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: HabitCard(
-                        habit: habits[index],
-                        onEdit: () => _editHabit(habits[index]),
-                        onDelete: () => _deleteHabit(habits[index].id),
-                        onToggleCompletion: () => toggleHabitCompletion(habits[index].id),
-                      ),
-                    ),
-                    childCount: habits.length,
-                  ),
                 ),
               ),
             ],
