@@ -105,10 +105,6 @@ class _NavBarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? progressColor.withOpacity(0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
