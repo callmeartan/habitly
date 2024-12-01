@@ -323,7 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               icon: Icons.description_outlined,
               title: 'FAQ',
               onTap: () async {
-                final url = Uri.parse('https://habitly.app/faq');
+                final url = Uri.parse('https://github.com/callmeartan/habitly-support/blob/main/README.md');
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url);
                 }
