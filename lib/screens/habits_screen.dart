@@ -212,7 +212,6 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             _buildHeader(progressColor),
             _buildErrorMessage(),
             _buildTabBar(theme, progressColor),
-            _buildSearchBar(theme, progressColor),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -326,43 +325,6 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           Tab(text: 'All'),
           Tab(text: 'Completed'),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(ThemeData theme, Color progressColor) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: TextField(
-        style: GoogleFonts.poppins(
-          color: progressColor,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search habits...',
-          hintStyle: GoogleFonts.poppins(
-            color: progressColor.withOpacity(0.5),
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: progressColor.withOpacity(0.5),
-          ),
-          filled: true,
-          fillColor: progressColor.withOpacity(0.05),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: progressColor.withOpacity(0.1),
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -6,7 +6,7 @@ class ThemeProvider with ChangeNotifier {
   final SharedPreferences _prefs;
   bool _isDarkMode;
 
-  ThemeProvider(this._prefs) : _isDarkMode = _prefs.getBool(_themeKey) ?? false;
+  ThemeProvider(this._prefs) : _isDarkMode = _prefs.getBool(_themeKey) ?? true;
 
   bool get isDarkMode => _isDarkMode;
 
