@@ -27,6 +27,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   List<Habit> _habits = [];
   bool _isLoading = true;
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
+  String? _error;
 
   Future<void> _showAddHabitDialog() async {
     final formKey = GlobalKey<FormState>();
@@ -209,6 +210,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
         child: Column(
           children: [
             _buildHeader(progressColor),
+            _buildErrorMessage(),
             _buildTabBar(theme, progressColor),
             _buildSearchBar(theme, progressColor),
             Expanded(
@@ -409,8 +411,15 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       final habitIndex = _habits.indexWhere((h) => h.id == habitId);
       if (habitIndex != -1) {
         final habit = _habits[habitIndex];
+        
+        // Check if habit needs reset before toggling
+        if (habit.needsReset()) {
+          habit.completedToday = false;
+          habit.progress = 0.0;
+        }
+        
         final isCompleting = !habit.completedToday;
-
+        
         final today = DateTime(
           DateTime.now().year,
           DateTime.now().month,
@@ -445,26 +454,34 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
         });
 
         await _habitRepository.saveHabits(_habits);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isCompleting ? 'Habit completed! 🎉' : 'Habit marked as incomplete',
-                style: GoogleFonts.poppins(),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update habit: $e')),
-        );
-      }
+      setState(() {
+        _error = 'Failed to update habit: ${e.toString()}';
+      });
     }
+  }
+
+  Widget _buildErrorMessage() {
+    if (_error == null) return const SizedBox.shrink();
+    
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SelectableText.rich(
+        TextSpan(
+          children: [
+            const WidgetSpan(
+              child: Icon(Icons.error_outline, color: Colors.red, size: 16),
+            ),
+            const TextSpan(text: ' '),
+            TextSpan(
+              text: _error,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteHabit(int habitId) async {

@@ -179,4 +179,32 @@ class Habit {
 
     return bestStreak;
   }
+
+  bool needsReset() {
+    if (completedToday) {
+      final now = DateTime.now();
+      final lastCompletionDate = completionDates.isNotEmpty 
+          ? completionDates.reduce((a, b) => a.isAfter(b) ? a : b)
+          : null;
+          
+      if (lastCompletionDate == null) return false;
+      
+      switch (frequency) {
+        case 'daily':
+          return !_isSameDay(lastCompletionDate, now);
+        case 'weekly':
+          return lastCompletionDate.difference(now).inDays >= 7;
+        case 'monthly':
+          return lastCompletionDate.month != now.month || 
+                 lastCompletionDate.year != now.year;
+        default:
+          return false;
+      }
+    }
+    return false;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 }
