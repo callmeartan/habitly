@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class StatCard extends StatelessWidget {
+class StatCard extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
@@ -15,96 +16,124 @@ class StatCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<StatCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _progressAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _progressAnimation = Tween<double>(
+      begin: 0,
+      end: widget.progress ?? 0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(StatCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.progress != widget.progress) {
+      _progressAnimation = Tween<double>(
+        begin: oldWidget.progress ?? 0,
+        end: widget.progress ?? 0,
+      ).animate(CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ));
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progressColor = isDark ? Colors.white : Colors.black;
 
-    // Enhanced color palette for better contrast
-    final cardColor = isDark
-        ? const Color(0xFF2C2C2E) // Dark mode secondary background
-        : Colors.white; // Pure white for light mode
-
-    final accentColor = isDark
-        ? const Color(0xFF0A84FF) // iOS dark mode blue
-        : const Color(0xFF007AFF); // iOS light mode blue
-
-    return Container(
-      width: 170,
-      height: 100,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          if (!isDark) BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Slightly stronger shadow
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-          if (!isDark) BoxShadow(
-            color: Colors.black.withOpacity(0.03), // Subtle inner shadow
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: !isDark ? Border.all(
-          color: Colors.black.withOpacity(0.05), // Subtle border
-          width: 1,
-        ) : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Title and icon row
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: accentColor,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: accentColor,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          // Value display
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          // Progress bar
-          if (progress != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: progress! / 100,
-                    backgroundColor: accentColor.withOpacity(0.12),
-                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                    minHeight: 3,
+                Icon(
+                  widget.icon,
+                  size: 16,
+                  color: progressColor,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  widget.title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: progressColor,
                   ),
                 ),
               ],
             ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              widget.value,
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: progressColor,
+              ),
+            ),
+            if (widget.progress != null) ...[
+              const SizedBox(height: 8),
+              AnimatedBuilder(
+                animation: _progressAnimation,
+                builder: (context, child) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _progressAnimation.value / 100,
+                      backgroundColor: progressColor.withOpacity(0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                      minHeight: 8,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

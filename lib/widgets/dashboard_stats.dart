@@ -6,16 +6,20 @@ import 'stat_card.dart';
 class DashboardStats extends StatelessWidget {
   final List<Habit> habits;
   final List<Task> tasks;
+  final Function(int) onNavigate;
 
   const DashboardStats({
     Key? key,
     required this.habits,
     required this.tasks,
+    required this.onNavigate,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 52) / 2;
 
     // Calculate tasks stats
     final todaysTasks = tasks.where((task) {
@@ -33,23 +37,38 @@ class DashboardStats extends StatelessWidget {
     final totalHabits = habits.length;
     final habitProgress = totalHabits > 0 ? (completedHabits / totalHabits * 100) : null;
 
-    return SizedBox(
-      height: 120,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          StatCard(
-            title: 'Habits',
-            value: '$completedHabits/$totalHabits',
-            icon: Icons.track_changes_outlined,
-            progress: habitProgress,
+          SizedBox(
+            width: cardWidth,
+            height: cardWidth * 0.7,
+            child: InkWell(
+              onTap: () => onNavigate(1), // Navigate to Habits tab
+              borderRadius: BorderRadius.circular(16),
+              child: StatCard(
+                title: 'Habits',
+                value: '$completedHabits/$totalHabits',
+                icon: Icons.track_changes_outlined,
+                progress: habitProgress,
+              ),
+            ),
           ),
-          StatCard(
-            title: 'Tasks',
-            value: totalTasks > 0 ? '$completedTasks/$totalTasks' : 'All clear today',
-            icon: Icons.task_outlined,
-            progress: taskProgress,
+          const SizedBox(width: 20),
+          SizedBox(
+            width: cardWidth,
+            height: cardWidth * 0.7,
+            child: InkWell(
+              onTap: () => onNavigate(2), // Navigate to Tasks tab
+              borderRadius: BorderRadius.circular(16),
+              child: StatCard(
+                title: 'Tasks',
+                value: totalTasks > 0 ? '$completedTasks/$totalTasks' : 'All clear today',
+                icon: Icons.task_outlined,
+                progress: taskProgress,
+              ),
+            ),
           ),
         ],
       ),

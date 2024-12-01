@@ -5,6 +5,7 @@ import 'package:habitly/screens/tasks_screen.dart';
 import 'package:habitly/screens/profile_screen.dart';
 
 import '../widgets/custom_bottom_nav_bar.dart';
+import '../providers/navigation_state.dart';
 
 class MainNavigationScaffold extends StatefulWidget {
   const MainNavigationScaffold({Key? key}) : super(key: key);
@@ -45,11 +46,14 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onItemSelected,
+    return NavigationState(
+      onNavigate: _onItemSelected,
+      child: Scaffold(
+        body: _screens[_selectedIndex],
+        bottomNavigationBar: CustomBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemSelected: _onItemSelected,
+        ),
       ),
     );
   }

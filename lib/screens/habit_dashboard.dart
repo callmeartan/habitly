@@ -14,8 +14,10 @@ import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_stats.dart';
 import '../widgets/error_view.dart';
 import '../widgets/habit_form.dart';
-import '../widgets/habits_list.dart';
+import '../widgets/habit_card.dart';
 import '../widgets/task_form.dart';
+import '../widgets/streak_overview.dart';
+import '../providers/navigation_state.dart';
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -553,35 +555,63 @@ class HabitDashboardState extends State<HabitDashboard> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20.0,
-            vertical: 16.0,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DashboardHeader(),
-              const SizedBox(height: 24),
-              DashboardCalendar(
-                tasks: _tasks,
-                selectedDate: _selectedDate,
-                onDateSelected: _onDateSelected,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DashboardHeader(),
+                    const SizedBox(height: 16),
+                    DashboardCalendar(
+                      tasks: _tasks,
+                      selectedDate: _selectedDate,
+                      onDateSelected: _onDateSelected,
+                    ),
+                    const SizedBox(height: 16),
+                    DashboardStats(
+                      habits: habits,
+                      tasks: _tasks,
+                      onNavigate: (index) {
+                        if (context.mounted) {
+                          NavigationState.of(context)?.onNavigate(index);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    StreakOverview(habits: habits),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Active Habits',
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              DashboardStats(
-                habits: habits,
-                tasks: _tasks,
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: HabitsList(
-                  habits: habits,
-                  onEdit: _editHabit,
-                  onDelete: _deleteHabit,
-                  onToggleCompletion: toggleHabitCompletion,
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: HabitCard(
+                        habit: habits[index],
+                        onEdit: () => _editHabit(habits[index]),
+                        onDelete: () => _deleteHabit(habits[index].id),
+                        onToggleCompletion: () => toggleHabitCompletion(habits[index].id),
+                      ),
+                    ),
+                    childCount: habits.length,
+                  ),
                 ),
               ),
             ],
