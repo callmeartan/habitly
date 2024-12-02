@@ -169,14 +169,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       if (value && !_notificationsEnabled) {
         final hasPermission = await _notificationService.requestPermissions();
         if (!hasPermission) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notification permissions denied'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
           return;
         }
       }
@@ -193,29 +185,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       if (!_notificationsEnabled) {
         await _notificationService.cancelAllNotifications();
       }
-
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                _notificationsEnabled
-                    ? 'Notifications enabled'
-                    : 'Notifications disabled'
-            ),
-            backgroundColor: Theme.of(context).primaryColor,
-          ),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to toggle notifications: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Silent error handling
+      print('Failed to toggle notifications: $e');
     }
   }
 
