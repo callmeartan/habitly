@@ -170,10 +170,8 @@ class AuthService {
 
   Future<UserCredential> signInWithGoogle() async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId: '1011838485758-bbk2rpikiud47ikrrp8vvlp3ju61oh5l.apps.googleusercontent.com',
-        scopes: ['email'],
-      );
+      // Initialize Google Sign In
+      final GoogleSignIn googleSignIn = GoogleSignIn();
 
       // Begin interactive sign in process
       final GoogleSignInAccount? gUser = await googleSignIn.signIn();
