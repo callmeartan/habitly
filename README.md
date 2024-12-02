@@ -29,39 +29,6 @@ Habitly is a modern, feature-rich habit-tracking application built with Flutter.
 - Persistent notification preferences
 - Flexible reminder management
 
-## 🎯 Key Components
-
-### Models
-```dart
-// Example of Habit model structure
-class Habit {
-  final int id;
-  String name;
-  String category;
-  int streak;
-  String frequency;
-  bool completedToday;
-  double progress;
-  DateTime? reminderTime;
-  List<DateTime> completionDates;
-  
-  // ... methods for streak calculation and date handling
-}
-```
-
-### Services
-```dart
-// Example of Notification Service
-class NotificationService {
-  Future<void> scheduleHabitReminder({
-    required int id,
-    required String habitName,
-    required DateTime scheduledTime,
-  }) async {
-    // Implementation for scheduling notifications
-  }
-}
-```
 
 ## 🚀 Getting Started
 
