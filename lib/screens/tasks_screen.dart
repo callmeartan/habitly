@@ -7,6 +7,7 @@ import '../widgets/task_form.dart';
 import '../widgets/task_card.dart';
 import 'dart:math' show max;
 import '../services/firebase_sync_service.dart';
+import '../services/notification_service.dart';
 
 class TasksScreen extends StatefulWidget {
   final VoidCallback onTaskUpdated;
@@ -27,6 +28,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   bool _isLoading = true;
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
   String _searchQuery = '';
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -209,6 +211,31 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 
                             await _taskRepository.updateTask(updatedTask);
 
+                            if (task.reminder != reminder) {
+                              try {
+                                // Cancel existing reminder if any
+                                await _notificationService.cancelReminder(task.id);
+
+                                // Schedule new reminder if set
+                                if (reminder != null) {
+                                  await _notificationService.scheduleTaskReminder(
+                                    id: task.id,
+                                    taskTitle: title,
+                                    scheduledTime: reminder,
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Failed to update reminder: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+
                             if (!mounted) return;
                             Navigator.pop(context);
                           } catch (e) {
@@ -328,6 +355,25 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
 
                             await _addTask(newTask);
                             await _loadTasks();
+
+                            if (reminder != null) {
+                              try {
+                                await _notificationService.scheduleTaskReminder(
+                                  id: newTask.id,
+                                  taskTitle: newTask.title,
+                                  scheduledTime: reminder,
+                                );
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Failed to set reminder: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
 
                             if (!mounted) return;
                             Navigator.pop(context);
@@ -563,12 +609,12 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: Icon(
-                    Icons.clear,
-                    color: progressColor.withOpacity(0.5),
-                  ),
-                  onPressed: () => setState(() => _searchQuery = ''),
-                )
+            icon: Icon(
+              Icons.clear,
+              color: progressColor.withOpacity(0.5),
+            ),
+            onPressed: () => setState(() => _searchQuery = ''),
+          )
               : null,
           filled: true,
           fillColor: progressColor.withOpacity(0.05),

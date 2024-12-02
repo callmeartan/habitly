@@ -7,6 +7,7 @@ import '/widgets/habit_form.dart';
 import '../widgets/habit_card.dart';
 import '../services/firebase_sync_service.dart';
 import 'dart:math' show max;
+import '../services/notification_service.dart';
 
 
 class HabitsScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   bool _isLoading = true;
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
   String? _error;
+  final NotificationService _notificationService = NotificationService();
 
   Future<void> _showAddHabitDialog() async {
     final formKey = GlobalKey<FormState>();
@@ -108,6 +110,15 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                               createdAt: DateTime.now(),
                               updatedAt: DateTime.now(),
                             );
+
+                            // Schedule notification if reminder is set
+                            if (reminderTime != null) {
+                              await _notificationService.scheduleHabitReminder(
+                                id: newHabit.id,
+                                habitName: newHabit.name,
+                                scheduledTime: reminderTime,
+                              );
+                            }
 
                             setState(() {
                               _habits.add(newHabit);
@@ -373,15 +384,15 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       final habitIndex = _habits.indexWhere((h) => h.id == habitId);
       if (habitIndex != -1) {
         final habit = _habits[habitIndex];
-        
+
         // Check if habit needs reset before toggling
         if (habit.needsReset()) {
           habit.completedToday = false;
           habit.progress = 0.0;
         }
-        
+
         final isCompleting = !habit.completedToday;
-        
+
         final today = DateTime(
           DateTime.now().year,
           DateTime.now().month,
@@ -426,7 +437,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
 
   Widget _buildErrorMessage() {
     if (_error == null) return const SizedBox.shrink();
-    
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SelectableText.rich(
@@ -537,24 +548,41 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   try {
-                    final habitIndex = _habits.indexWhere((h) => h.id == habit.id);
-                    if (habitIndex != -1) {
-                      setState(() {
-                        _habits[habitIndex] = habit.copyWith(
-                          name: name,
-                          category: category,
-                          frequency: frequency,
-                          reminderTime: reminderTime,
-                        );
-                      });
-                      await _habitRepository.saveHabits(_habits);
-                      Navigator.pop(context);
+                    // Cancel existing notification
+                    await _notificationService.cancelReminder(habit.id);
 
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Habit updated successfully')),
-                        );
+                    final updatedHabit = habit.copyWith(
+                      name: name,
+                      category: category,
+                      frequency: frequency,
+                      reminderTime: reminderTime,
+                      updatedAt: DateTime.now(),
+                    );
+
+                    // Schedule new notification if reminder is set
+                    if (reminderTime != null) {
+                      await _notificationService.scheduleHabitReminder(
+                        id: updatedHabit.id,
+                        habitName: updatedHabit.name,
+                        scheduledTime: reminderTime,
+                      );
+                    }
+
+                    setState(() {
+                      final index = _habits.indexWhere(
+                            (h) => h.id == habit.id,
+                      );
+                      if (index != -1) {
+                        _habits[index] = updatedHabit;
                       }
+                    });
+                    await _habitRepository.saveHabits(_habits);
+                    Navigator.pop(context);
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Habit updated successfully')),
+                      );
                     }
                   } catch (e) {
                     if (mounted) {

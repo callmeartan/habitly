@@ -16,6 +16,7 @@ import '../repositories/task_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:habitly/repositories/task_repository.dart' show TaskRepository;
 import 'package:habitly/repositories/habit_repository.dart' show HabitRepository;
+import 'package:habitly/services/notification_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onRefresh;
@@ -45,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   final TaskRepository _taskRepository = TaskRepository();
   bool _isSyncing = false;
   late AnimationController _syncAnimationController;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -162,11 +164,59 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   }
 
   Future<void> _toggleNotifications(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notificationsEnabled = value;
-    });
-    await prefs.setBool('notifications_enabled', value);
+    try {
+      // Request permissions if enabling
+      if (value && !_notificationsEnabled) {
+        final hasPermission = await _notificationService.requestPermissions();
+        if (!hasPermission) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notification permissions denied'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _notificationsEnabled = value;
+      });
+
+      // Update SharedPreferences
+      await prefs.setBool('notifications_enabled', _notificationsEnabled);
+
+      // Cancel all notifications if disabled
+      if (!_notificationsEnabled) {
+        await _notificationService.cancelAllNotifications();
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                _notificationsEnabled
+                    ? 'Notifications enabled'
+                    : 'Notifications disabled'
+            ),
+            backgroundColor: Theme.of(context).primaryColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to toggle notifications: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _toggleDarkMode(bool value) async {
@@ -772,10 +822,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                       : null,
                                   child: _imagePath == null
                                       ? Icon(
-                                          Icons.person,
-                                          size: 60,
-                                          color: progressColor.withOpacity(0.7),
-                                        )
+                                    Icons.person,
+                                    size: 60,
+                                    color: progressColor.withOpacity(0.7),
+                                  )
                                       : null,
                                 ),
                                 Positioned(
@@ -877,18 +927,18 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             onTap: _syncData,
             trailing: _isSyncing
                 ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                    ),
-                  )
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              ),
+            )
                 : Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: progressColor.withOpacity(0.5),
-                  ),
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: progressColor.withOpacity(0.5),
+            ),
           ),
           _buildSettingCard(
             theme,
@@ -916,14 +966,14 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   }
 
   Widget _buildSettingCard(
-    ThemeData theme,
-    Color progressColor, {
-    required IconData icon,
-    required String title,
-    VoidCallback? onTap,
-    Widget? trailing,
-    bool isDestructive = false,
-  }) {
+      ThemeData theme,
+      Color progressColor, {
+        required IconData icon,
+        required String title,
+        VoidCallback? onTap,
+        Widget? trailing,
+        bool isDestructive = false,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -948,8 +998,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               children: [
                 Icon(
                   icon,
-                  color: isDestructive 
-                      ? theme.colorScheme.error 
+                  color: isDestructive
+                      ? theme.colorScheme.error
                       : progressColor.withOpacity(0.7),
                 ),
                 const SizedBox(width: 16),
@@ -958,8 +1008,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                     title,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
-                      color: isDestructive 
-                          ? theme.colorScheme.error 
+                      color: isDestructive
+                          ? theme.colorScheme.error
                           : progressColor,
                     ),
                   ),

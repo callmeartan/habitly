@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 class DashboardHeader extends StatefulWidget {
   const DashboardHeader({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _DashboardHeaderState extends State<DashboardHeader> with SingleTickerProv
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _notificationsEnabled = false;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -51,11 +53,46 @@ class _DashboardHeaderState extends State<DashboardHeader> with SingleTickerProv
   }
 
   Future<void> _toggleNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notificationsEnabled = !_notificationsEnabled;
-    });
-    await prefs.setBool('notifications_enabled', _notificationsEnabled);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Request permissions if enabling
+      if (!_notificationsEnabled) {
+        final hasPermission = await _notificationService.requestPermissions();
+        if (!hasPermission) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notification permissions denied'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      setState(() {
+        _notificationsEnabled = !_notificationsEnabled;
+      });
+
+      // Update SharedPreferences
+      await prefs.setBool('notifications_enabled', _notificationsEnabled);
+
+      // Cancel all notifications if disabled
+      if (!_notificationsEnabled) {
+        await _notificationService.cancelAllNotifications();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to toggle notifications: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override

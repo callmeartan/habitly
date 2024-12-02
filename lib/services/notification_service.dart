@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'dart:io' show Platform;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -108,6 +109,31 @@ class NotificationService {
   }
 
   Future<void> cancelAllReminders() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
+  }
+
+  Future<bool> requestPermissions() async {
+    if (Platform.isIOS) {
+      final settings = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return settings ?? false;
+    } else if (Platform.isAndroid) {
+      final granted = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+      return granted ?? false;
+    }
+    return false;
+  }
+
+  Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 }
