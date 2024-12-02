@@ -1,140 +1,161 @@
-# Habitly - Flutter Habit Tracking App
+# Habitly
 
+<div align="center">
 
-Habitly is a modern, feature-rich habit-tracking application built with Flutter. It helps users build and maintain good habits through an intuitive interface, detailed progress tracking, and smart reminders.
+<img src="/api/placeholder/120/120" alt="Habitly Logo" style="margin: 20px">
 
+**A beautiful, modern habit tracking app built with Flutter**
 
+[![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
 
-## ✨ Features
+[Features](#-key-features) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Contributing](#-contributing)
 
-### Core Features
-- 📱 Create and manage daily, weekly, or monthly habits
-- 📊 Track progress with visual indicators
-- 📅 Calendar view for habit completion tracking
-- 🔥 Streak tracking and statistics
-- 🔔 Smart reminders and notifications
-- 🌓 Dark and light theme support
-- 🎯 Category-based habit organization
+</div>
 
-### Calendar & Statistics
-- Visual calendar with completion markers
-- Current and best streak tracking
-- Total completion days
-- Progress statistics
-- Daily completion indicators
+## 🌟 Key Features
 
-### Smart Notifications
-- Custom reminder times per habit
-- Daily notification scheduling
-- Persistent notification preferences
-- Flexible reminder management
+### Core Functionality
+- 📱 Track daily, weekly, and monthly habits
+- 📊 Visual progress tracking with intuitive metrics
+- 🔥 Streak monitoring with detailed statistics
+- 🎯 Smart categorization and priority management
+- 🔄 Seamless offline/online synchronization
+- 🔔 Customizable reminders and notifications
 
+### User Experience
+- 🎨 Modern, clean interface with smooth animations
+- 🌓 Beautiful dark and light themes
+- 📱 Responsive design across all screen sizes
+- ⚡ Optimized performance and instant feedback
+- 🔍 Powerful search and filtering capabilities
 
-## 🚀 Getting Started
+### Data & Analytics
+- 📈 Detailed progress visualization
+- 📊 Comprehensive habit statistics
+- 📅 Interactive calendar view
+- 🎯 Goal tracking and achievements
+- 📱 Cross-device synchronization
 
-### Prerequisites
-- Flutter 3.x or higher
-- Dart 3.x or higher
-- iOS 12.0+ / Android 5.0+
-- Xcode for iOS development
-- Android Studio for Android development
+## 💻 Tech Stack
 
-### Installation
+### Frontend
+- **Framework**: Flutter 3.x
+- **State Management**: Provider
+- **Local Storage**: SharedPreferences
+- **Notifications**: flutter_local_notifications
+- **UI Components**: Material Design & Custom Widgets
 
-1. Clone the repository
-```bash
-git clone https://github.com/callmeartan/habitly.git
-```
+### Backend
+- **Authentication**: Firebase Auth
+- **Database**: Cloud Firestore
+- **Analytics**: Firebase Analytics
+- **Cloud Functions**: Firebase Cloud Functions
 
-2. Navigate to project directory
-```bash
-cd habitly
-```
+### Development
+- **Language**: Dart 3.x
+- **Architecture**: Clean Architecture
+- **Testing**: Unit & Widget Tests
+- **CI/CD**: GitHub Actions
 
-3. Install dependencies
-```bash
-flutter pub get
-```
-
-4. Run the app
-```bash
-flutter run
-```
-
-## 📁 Project Structure
+## 🏗 Architecture
 
 ```
 lib/
 ├── models/
-│   └── habit.dart          // Habit data model with completion tracking
+│   ├── habit.dart              # Core habit data model
+│   └── task.dart               # Task management model
 ├── screens/
-│   ├── habit_dashboard.dart    // Main dashboard UI
-│   └── habit_calendar_screen.dart  // Calendar and statistics view
-├── widgets/
-│   ├── habit_card.dart     // Individual habit display
-│   └── habit_form.dart     // Habit creation/editing form
+│   ├── dashboard/
+│   │   ├── habit_dashboard.dart    # Main dashboard
+│   │   └── widgets/                # Dashboard components
+│   ├── calendar/
+│   │   └── habit_calendar.dart     # Calendar view
+│   └── settings/
+│       └── settings_screen.dart    # App settings
 ├── services/
-│   └── notification_service.dart  // Local notifications handler
-├── providers/
-│   └── theme_provider.dart    // Theme management
+│   ├── auth_service.dart       # Authentication
+│   ├── firebase_sync.dart      # Cloud sync
+│   └── notification_service.dart    # Local notifications
 ├── repositories/
-│   └── habit_repository.dart  // Data persistence
-└── main.dart
+│   ├── habit_repository.dart   # Habit data handling
+│   └── task_repository.dart    # Task data handling
+└── providers/
+    ├── theme_provider.dart     # Theme management
+    └── navigation_state.dart   # Navigation state
 ```
+
+## 🚀 Implementation Highlights
+
+### Authentication & Sync
+- Seamless Google & Apple Sign-In
+- Secure token management
+- Efficient data synchronization
+- Offline capability with local persistence
+
+### State Management
+- Reactive state updates with Provider
+- Efficient UI rebuilds
+- Clean separation of concerns
+- Robust error handling
+
+### Data Persistence
+- Local data caching
+- Automatic cloud backup
+- Conflict resolution
+- Data migration support
 
 ## 🛠 Technical Features
 
-### State Management
-- Provider for state management
-- Efficient UI updates
-- Persistent storage
+### Performance Optimization
+- Lazy loading of data
+- Efficient list rendering
+- Image caching
+- Background task handling
 
-### UI/UX
-- Custom animations
-- Responsive design
-- Form validation
-- Interactive calendar
-- Progress indicators
+### Security
+- Secure data storage
+- Firebase Authentication
+- Data encryption
+- Privacy protection
 
-### Data Handling
-- Local persistence with SharedPreferences
-- JSON serialization
-- Date normalization
-- Streak calculations
+## 🔜 Future Roadmap
 
-## 🔜 Roadmap
+- [ ] Advanced Analytics Dashboard
+- [ ] Social Features & Sharing
+- [ ] Custom Widget Support
+- [ ] AI-Powered Insights
+- [ ] Extended Theme Customization
+- [ ] Public API
 
-- [ ] Cloud synchronization
-- [ ] Social sharing features
-- [ ] Advanced Analytics
-- [ ] Widget support
-- [ ] Custom themes
-- [ ] Data export/import
+## 👥 Contributing
 
-## 🤝 Contributing
+We welcome contributions! Here's how you can help:
 
-Contributions make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+## 📫 Contact & Support
+
+- **Email**: support@habitly.app
+- **Twitter**: [@HabitlyApp](https://twitter.com/HabitlyApp)
+- **Website**: [habitly.app](https://habitly.app)
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-## 📫 Contact
+---
 
-Artan - [GitHub Profile](https://github.com/callmeartan)
+<div align="center">
 
-Project Link: [https://github.com/callmeartan/habitly](https://github.com/callmeartan/habitly)
+Made with ❤️ by [Artan](https://github.com/callmeartan)
 
-## 🌟 Show your support
+[Website](https://habitly.app) • [Documentation](https://docs.habitly.app) • [Support](https://habitly.app/support)
 
-If you found this project helpful, please consider giving it a ⭐️!
-
-<p align="center">
-Made by <a href="https://github.com/callmeartan">Artan</a>
-</p>
+</div>
