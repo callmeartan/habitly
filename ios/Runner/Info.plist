@@ -42,7 +42,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
-	<string>12.0</string>
+	<string>15.0</string>
 	<key>NSLocalNotificationUsageDescription</key>
 	<string>Habitly needs to send you notifications to remind you about your habits.</string>
 	<key>NSRemindersUsageDescription</key>
