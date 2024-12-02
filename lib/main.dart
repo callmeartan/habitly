@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habitly/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,9 +12,10 @@ import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'package:habitly/repositories/task_repository.dart';
 import 'package:habitly/repositories/habit_repository.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await NotificationService().init();
   // Initialize both Firebase and SharedPreferences
   final results = await Future.wait([
     Firebase.initializeApp(
