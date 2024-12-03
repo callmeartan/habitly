@@ -3,6 +3,10 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/task.dart';
 import '../widgets/task_form.dart';
+import '../repositories/task_repository.dart';
+import '../services/firebase_sync_service.dart';
+import '../services/notification_service.dart';
+import 'dart:math' show max;
 
 class TaskCalendarScreen extends StatefulWidget {
   final List<Task> tasks;
@@ -22,6 +26,10 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
   late CalendarFormat _calendarFormat;
   late DateTime _focusedDay;
   late DateTime _selectedDay;
+
+  final TaskRepository _taskRepository = TaskRepository();
+  final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -104,20 +112,61 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: () {
-                        if (formKey.currentState!.validate()) {
-                          final newTask = Task(
-                            id: DateTime.now().millisecondsSinceEpoch,
-                            title: title,
-                            description: description,
-                            category: category,
-                            priority: priority,
-                            dueDate: dueDate ?? DateTime.now(),
-                            dueTime: dueTime,
-                            reminder: reminder,
-                          );
-                          widget.onTaskAdded(newTask);
-                          Navigator.pop(context);
+                      onPressed: () async {
+                        if (formKey.currentState!.validate() && dueDate != null) {
+                          try {
+                            final newTaskId = widget.tasks.isEmpty
+                                ? 1
+                                : widget.tasks.map((t) => t.id).reduce(max) + 1;
+
+                            final newTask = Task(
+                              id: newTaskId,
+                              userId: _firebaseSyncService.currentUserId ?? '',
+                              title: title,
+                              description: description,
+                              category: category,
+                              priority: priority,
+                              dueDate: dueDate!,
+                              dueTime: dueTime,
+                              reminder: reminder,
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                            );
+
+                            await _taskRepository.addTask(newTask);
+                            widget.onTaskAdded(newTask);
+
+                            if (reminder != null) {
+                              try {
+                                await _notificationService.scheduleTaskReminder(
+                                  id: newTask.id,
+                                  taskTitle: newTask.title,
+                                  scheduledTime: reminder,
+                                );
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Failed to set reminder: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to add task: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -344,7 +393,7 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildStatCard(
-                        'Monthly Tasks',
+                        'Monthly ',
                         _getMonthlyTaskCount().toString(),
                         Icons.calendar_month,
                         theme,
