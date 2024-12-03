@@ -452,112 +452,237 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   Future<void> _showLogoutConfirmation() async {
     return showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
+          backgroundColor: Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(16),
           ),
-          title: Text(
-            'Confirm Logout',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.logout_rounded,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sign Out',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Are you sure you want to sign out?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Go back',
+                          style: GoogleFonts.poppins(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _handleSignOut();
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Sign Out',
+                          style: GoogleFonts.poppins(
+                            color: Theme.of(context).colorScheme.onError,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Before logging out:',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeleteAccountConfirmation() async {
+    bool isLoading = false;
+
+    return showDialog(
+      context: context,
+      barrierDismissible: !isLoading,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.amber,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Any unsaved data will be lost',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.sync_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Consider syncing your data first',
+                    const SizedBox(height: 16),
+                    Text(
+                      'Delete Account',
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _syncData();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 8),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                        children: [
+                          const TextSpan(text: 'WARNING '),
+                          TextSpan(
+                            text: 'this is permanent and\ncannot be undone!',
+                            style: GoogleFonts.poppins(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Sync Data First',
-                    style: GoogleFonts.poppins(
-                      color: Theme.of(context).colorScheme.onPrimary,
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isLoading ? null : () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.surface,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Go back',
+                              style: GoogleFonts.poppins(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    setState(() => isLoading = true);
+                                    try {
+                                      await _authService.deleteAccount();
+                                      if (!mounted) return;
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (context) => const LoginScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to delete account: ${e.toString()}'),
+                                          backgroundColor: Theme.of(context).colorScheme.error,
+                                        ),
+                                      );
+                                    }
+                                  },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: isLoading
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).colorScheme.onError,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    'Start Deletion',
+                                    style: GoogleFonts.poppins(
+                                      color: Theme.of(context).colorScheme.onError,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _handleSignOut();
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Logout Anyway',
-                    style: GoogleFonts.poppins(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -758,7 +883,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: Column(
                         children: [
                           Row(
@@ -781,7 +906,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
                           GestureDetector(
                             onTap: _pickImage,
                             child: Stack(
@@ -804,7 +929,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                   bottom: 0,
                                   right: 0,
                                   child: Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
                                       color: theme.cardColor,
                                       shape: BoxShape.circle,
@@ -817,7 +942,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                                     ),
                                     child: Icon(
                                       Icons.camera_alt,
-                                      size: 20,
+                                      size: 18,
                                       color: progressColor.withOpacity(0.7),
                                     ),
                                   ),
@@ -825,7 +950,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           Text(
                             _userName,
                             style: GoogleFonts.poppins(
@@ -844,7 +969,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _buildSettingsSection(theme, progressColor),
                   ],
                 ),
@@ -924,6 +1049,15 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               color: progressColor.withOpacity(0.5),
             ),
           ),
+          if (!_isOfflineMode)
+            _buildSettingCard(
+              theme,
+              progressColor,
+              icon: Icons.delete_forever_outlined,
+              title: 'Delete Account',
+              onTap: _showDeleteAccountConfirmation,
+              isDestructive: true,
+            ),
           _buildSettingCard(
             theme,
             progressColor,
@@ -947,7 +1081,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
         bool isDestructive = false,
       }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
