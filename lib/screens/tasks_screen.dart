@@ -551,7 +551,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       value: completionRate,
                       backgroundColor: progressColor.withOpacity(0.1),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.primary,
+                        progressColor,
                       ),
                       strokeWidth: 3,
                     ),
@@ -561,7 +561,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: progressColor,
                         ),
                       ),
                     ),
@@ -574,7 +574,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                 icon: Icon(
                   Icons.add_circle_outline,
                   color: progressColor,
-                  size: 32,
+                  size: 42,
                 ),
                 tooltip: 'Add Task',
               ),

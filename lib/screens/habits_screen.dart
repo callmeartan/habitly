@@ -275,35 +275,31 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           ),
           Row(
             children: [
-              Row(
-                children: [
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Stack(
-                      children: [
-                        CircularProgressIndicator(
-                          value: completionRate,
-                          backgroundColor: progressColor.withOpacity(0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary,
-                          ),
-                          strokeWidth: 3,
-                        ),
-                        Center(
-                          child: Text(
-                            '$completedToday/$totalHabits',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: Stack(
+                  children: [
+                    CircularProgressIndicator(
+                      value: completionRate,
+                      backgroundColor: progressColor.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progressColor,
+                      ),
+                      strokeWidth: 3,
                     ),
-                  ),
-                ],
+                    Center(
+                      child: Text(
+                        '$completedToday/$totalHabits',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: progressColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 12),
               IconButton(
@@ -311,7 +307,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                 icon: Icon(
                   Icons.add_circle_outline,
                   color: progressColor,
-                  size: 32,
+                  size: 42,
                 ),
                 tooltip: 'Add Habit',
               ),
