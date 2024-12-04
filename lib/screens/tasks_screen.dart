@@ -442,15 +442,26 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       final today = DateTime.now();
       return task.dueDate.year == today.year &&
           task.dueDate.month == today.month &&
-          task.dueDate.day == today.day;
+          task.dueDate.day == today.day &&
+          !task.isCompleted;
     }).toList();
     return _buildTaskList(todayTasks, progressColor);
   }
 
   Widget _buildUpcomingTasksList(Color progressColor) {
     final today = DateTime.now();
-    final upcomingTasks = _tasks.where((task) => task.dueDate.isAfter(today)).toList();
+    final upcomingTasks = _tasks.where((task) {
+      final isToday = task.dueDate.year == today.year &&
+                      task.dueDate.month == today.month &&
+                      task.dueDate.day == today.day;
+      return (task.dueDate.isAfter(today) || isToday) && !task.isCompleted;
+    }).toList();
     return _buildTaskList(upcomingTasks, progressColor);
+  }
+
+  Widget _buildCompletedTasksList(Color progressColor) {
+    final completedTasks = _tasks.where((task) => task.isCompleted).toList();
+    return _buildTaskList(completedTasks, progressColor);
   }
 
   @override
@@ -478,9 +489,9 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildAllTasksList(progressColor),
-                  _buildTodayTasksList(progressColor),
                   _buildUpcomingTasksList(progressColor),
+                  _buildTodayTasksList(progressColor),
+                  _buildCompletedTasksList(progressColor),
                 ],
               ),
             ),
@@ -582,9 +593,9 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ],
         ),
         tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Today'),
           Tab(text: 'Upcoming'),
+          Tab(text: 'Today'),
+          Tab(text: 'Completed'),
         ],
       ),
     );
