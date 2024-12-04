@@ -483,7 +483,7 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                       Text(
                         'Overview',
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
+                          fontSize: 20,
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
                         ),
