@@ -29,6 +29,8 @@ class StreakOverview extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final limitedHabits = habits.take(5).toList();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -60,7 +62,7 @@ class StreakOverview extends StatelessWidget {
             isDark,
           ),
           const SizedBox(height: 16),
-          ...habits.map((habit) => Padding(
+          ...limitedHabits.map((habit) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildStreakItem(
               habit.name,
