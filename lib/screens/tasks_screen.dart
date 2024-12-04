@@ -498,62 +498,87 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTaskDialog,
-        child: Icon(
-          Icons.add,
-          color: progressColor,
-        ),
-      ),
     );
   }
 
   Widget _buildHeader(Color progressColor) {
-    final completedTasks = _tasks.where((task) => task.isCompleted).length;
-    final totalTasks = _tasks.length;
+    final today = DateTime.now();
+    final todayTasks = _tasks.where((task) {
+      return task.dueDate.year == today.year &&
+             task.dueDate.month == today.month &&
+             task.dueDate.day == today.day;
+    }).toList();
+    
+    final completedTodayTasks = todayTasks.where((task) => task.isCompleted).length;
+    final totalTodayTasks = todayTasks.length;
+    final completionRate = totalTodayTasks > 0 ? completedTodayTasks / totalTodayTasks : 0.0;
 
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tasks',
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: progressColor,
+                  ),
+                ),
+                Text(
+                  DateFormat('MMMM d, yyyy').format(DateTime.now()),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: progressColor.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
             children: [
-              Text(
-                'Tasks',
-                style: GoogleFonts.poppins(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: progressColor,
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: Stack(
+                  children: [
+                    CircularProgressIndicator(
+                      value: completionRate,
+                      backgroundColor: progressColor.withOpacity(0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                      strokeWidth: 3,
+                    ),
+                    Center(
+                      child: Text(
+                        '$completedTodayTasks/$totalTodayTasks',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                DateFormat('MMMM d, yyyy').format(DateTime.now()),
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: progressColor.withOpacity(0.7),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: _showAddTaskDialog,
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: progressColor,
+                  size: 32,
                 ),
+                tooltip: 'Add Task',
               ),
             ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: progressColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '$completedTasks/$totalTasks completed',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: progressColor,
-              ),
-            ),
           ),
         ],
       ),

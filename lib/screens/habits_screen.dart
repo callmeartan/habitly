@@ -238,62 +238,84 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddHabitDialog,
-        child: Icon(
-          Icons.add,
-          color: progressColor,
-        ),
-      ),
     );
   }
 
   Widget _buildHeader(Color progressColor) {
     final completedToday = _habits.where((h) => h.completedToday).length;
     final totalHabits = _habits.length;
+    final completionRate = totalHabits > 0 ? completedToday / totalHabits : 0.0;
 
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Habits',
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: progressColor,
+                  ),
+                ),
+                Text(
+                  DateFormat('MMMM d, yyyy').format(DateTime.now()),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: progressColor.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
             children: [
-              Text(
-                'Habits',
-                style: GoogleFonts.poppins(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: progressColor,
-                ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Stack(
+                      children: [
+                        CircularProgressIndicator(
+                          value: completionRate,
+                          backgroundColor: progressColor.withOpacity(0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                          strokeWidth: 3,
+                        ),
+                        Center(
+                          child: Text(
+                            '$completedToday/$totalHabits',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                DateFormat('MMMM d, yyyy').format(DateTime.now()),
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: progressColor.withOpacity(0.7),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: _showAddHabitDialog,
+                icon: Icon(
+                  Icons.add_circle_outline,
+                  color: progressColor,
+                  size: 32,
                 ),
+                tooltip: 'Add Habit',
               ),
             ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: progressColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '$completedToday/$totalHabits completed',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: progressColor,
-              ),
-            ),
           ),
         ],
       ),
