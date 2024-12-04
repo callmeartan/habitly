@@ -228,6 +228,112 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
         task.dueDate.isBefore(weekFromNow)).length;
   }
 
+  Widget _buildUpcomingDeadlinesCard(ThemeData theme) {
+    final upcomingTasks = widget.tasks
+        .where((task) => 
+            !task.isCompleted && 
+            task.dueDate.isAfter(DateTime.now()) &&
+            task.dueDate.isBefore(DateTime.now().add(const Duration(days: 7))))
+        .toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+
+    if (upcomingTasks.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Upcoming Deadlines',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              Icon(
+                Icons.upcoming,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...upcomingTasks.take(3).map((task) {
+            final isOverdue = task.dueDate.isBefore(DateTime.now());
+            final isToday = task.dueDate.difference(DateTime.now()).inDays == 0;
+            final isTomorrow = task.dueDate.difference(DateTime.now()).inDays == 1;
+            
+            String timeText;
+            if (isOverdue) {
+              timeText = 'Overdue';
+            } else if (isToday) {
+              timeText = 'Today';
+            } else if (isTomorrow) {
+              timeText = 'Tomorrow';
+            } else {
+              timeText = 'In ${task.dueDate.difference(DateTime.now()).inDays} days';
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _getPriorityColor(task.priority),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    timeText,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: isOverdue 
+                        ? Colors.red 
+                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -356,16 +462,16 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
 
             // Stats Container
             Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -375,9 +481,9 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Task Overview',
+                        'Overview',
                         style: GoogleFonts.poppins(
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
                         ),
@@ -385,46 +491,44 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                       Icon(
                         Icons.analytics_outlined,
                         color: colorScheme.primary,
+                        size: 20,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildStatCard(
-                        'Monthly ',
+                        'Monthly',
                         _getMonthlyTaskCount().toString(),
                         Icons.calendar_month,
                         theme,
-                        Colors.blue,
+                        Colors.blue.shade400,
                       ),
                       _buildStatCard(
                         'High Priority',
                         _getHighPriorityTaskCount().toString(),
                         Icons.priority_high,
                         theme,
-                        Colors.red,
+                        Colors.red.shade400,
                       ),
                       _buildStatCard(
                         'This Week',
                         _getUpcomingWeekTaskCount().toString(),
                         Icons.upcoming,
                         theme,
-                        Colors.green,
+                        Colors.green.shade400,
                       ),
                     ],
                   ),
                 ],
               ),
             ),
+
+            _buildUpcomingDeadlinesCard(theme),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTaskDialog(_selectedDay),
-        backgroundColor: colorScheme.primary,
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -437,21 +541,25 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
       Color color,
       ) {
     return Container(
-      width: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      width: 90,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -460,9 +568,9 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: theme.textTheme.bodyMedium?.color,
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
           ),
         ],
