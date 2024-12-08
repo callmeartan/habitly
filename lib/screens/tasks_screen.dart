@@ -87,7 +87,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       itemCount: filteredTasks.length,
       itemBuilder: (context, index) {
         final task = filteredTasks[index];
@@ -418,18 +418,49 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   }
 
   Future<void> _deleteTask(int taskId) async {
-    final taskToDelete = _tasks.firstWhere((t) => t.id == taskId);
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete Task',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete this task?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
 
-    try {
-      setState(() {
-        _tasks.removeWhere((t) => t.id == taskId);
-      });
+    if (shouldDelete ?? false) {
+      final taskToDelete = _tasks.firstWhere((t) => t.id == taskId);
 
-      await _taskRepository.deleteTask(taskId);
-    } catch (e) {
-      setState(() {
-        _tasks.add(taskToDelete);
-      });
+      try {
+        setState(() {
+          _tasks.removeWhere((t) => t.id == taskId);
+        });
+        await _taskRepository.deleteTask(taskId);
+      } catch (e) {
+        setState(() {
+          _tasks.add(taskToDelete);
+        });
+      }
     }
   }
 
