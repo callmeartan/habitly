@@ -88,10 +88,23 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final user = _authService.currentUser;
+    
+    // Get the stored image path
+    String? storedImagePath = prefs.getString('profile_image');
+    
+    // Verify the image file exists
+    if (storedImagePath != null) {
+      final imageFile = File(storedImagePath);
+      if (!await imageFile.exists()) {
+        // If file doesn't exist, clear the stored path
+        storedImagePath = null;
+        await prefs.remove('profile_image');
+      }
+    }
 
     setState(() {
       _isOfflineMode = prefs.getBool('offline_mode') ?? true;
-      _imagePath = prefs.getString('profile_image');
+      _imagePath = storedImagePath;
       _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
       _darkModeEnabled = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
 
@@ -143,18 +156,43 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       );
 
       if (image != null) {
+        // Get the app's documents directory
         final Directory appDocDir = await getApplicationDocumentsDirectory();
-        final String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final String permanentPath = '${appDocDir.path}/$fileName';
+        
+        // Create a dedicated directory for profile pictures if it doesn't exist
+        final Directory profilePicsDir = Directory('${appDocDir.path}/profile_pictures');
+        if (!await profilePicsDir.exists()) {
+          await profilePicsDir.create(recursive: true);
+        }
 
+        // Generate a unique filename using UUID or timestamp
+        final String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final String permanentPath = '${profilePicsDir.path}/$fileName';
+
+        // Copy the image to the permanent location
         await File(image.path).copy(permanentPath);
 
-        setState(() {
-          _imagePath = permanentPath;
-        });
+        // Delete old profile picture if it exists
+        if (_imagePath != null) {
+          try {
+            final oldFile = File(_imagePath!);
+            if (await oldFile.exists()) {
+              await oldFile.delete();
+            }
+          } catch (e) {
+            print('Error deleting old profile picture: $e');
+          }
+        }
 
+        // Update state and save to SharedPreferences
+        setState(() => _imagePath = permanentPath);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('profile_image', permanentPath);
+
+        // If user is logged in, you might want to upload to cloud storage here
+        if (_currentUser != null) {
+          // TODO: Implement cloud storage upload
+        }
       }
     } catch (e) {
       print('Failed to update profile picture: $e');
