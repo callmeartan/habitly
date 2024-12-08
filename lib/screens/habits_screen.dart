@@ -188,10 +188,22 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     setState(() => _isLoading = true);
     try {
       final loadedHabits = await _habitRepository.loadHabits();
+      
+      // Reset habits that need it before setting state
+      for (var habit in loadedHabits) {
+        if (habit.needsReset()) {
+          habit.completedToday = false;
+          habit.progress = 0.0;
+        }
+      }
+
       setState(() {
         _habits = loadedHabits;
         _isLoading = false;
       });
+      
+      // Save the reset habits
+      await _habitRepository.saveHabits(_habits);
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -403,34 +415,51 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       if (habitIndex != -1) {
         final habit = _habits[habitIndex];
 
-        // Check if habit needs reset before toggling
+        // Always check if habit needs reset before toggling
         if (habit.needsReset()) {
-          habit.completedToday = false;
-          habit.progress = 0.0;
+          setState(() {
+            _habits[habitIndex] = habit.copyWith(
+              completedToday: false,
+              progress: 0.0,
+              // Reset completion dates to remove old date
+              completionDates: habit.completionDates.where((date) {
+                final completionDate = date.toLocal();
+                final today = DateTime.now().toLocal();
+                return completionDate.year == today.year &&
+                       completionDate.month == today.month &&
+                       completionDate.day == today.day;
+              }).toList(),
+            );
+          });
+          await _habitRepository.saveHabits(_habits);
+          
+          // Now toggle the habit for the new day
+          _toggleHabitCompletion(habitId); // Recursive call after reset
+          return;
         }
 
         final isCompleting = !habit.completedToday;
-
-        final today = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
+        final today = DateTime.now().toLocal();
+        final startOfDay = DateTime(
+          today.year,
+          today.month,
+          today.day,
         );
 
         List<DateTime> updatedCompletionDates = List<DateTime>.from(habit.completionDates);
 
         if (isCompleting) {
           if (!updatedCompletionDates.any((date) =>
-          date.year == today.year &&
-              date.month == today.month &&
-              date.day == today.day)) {
-            updatedCompletionDates.add(today);
+              date.year == startOfDay.year &&
+              date.month == startOfDay.month &&
+              date.day == startOfDay.day)) {
+            updatedCompletionDates.add(startOfDay);
           }
         } else {
           updatedCompletionDates.removeWhere((date) =>
-          date.year == today.year &&
-              date.month == today.month &&
-              date.day == today.day);
+              date.year == startOfDay.year &&
+              date.month == startOfDay.month &&
+              date.day == startOfDay.day);
         }
 
         final newStreak = isCompleting ? habit.streak + 1 : habit.streak - 1;

@@ -182,29 +182,27 @@ class Habit {
 
   bool needsReset() {
     if (completedToday) {
-      final now = DateTime.now();
-      final lastCompletionDate = completionDates.isNotEmpty 
-          ? completionDates.reduce((a, b) => a.isAfter(b) ? a : b)
-          : null;
-          
-      if (lastCompletionDate == null) return false;
+      // Get current time in local timezone
+      final now = DateTime.now().toLocal();
+      final today = DateTime(now.year, now.month, now.day);
       
-      switch (frequency) {
-        case 'daily':
-          return !_isSameDay(lastCompletionDate, now);
-        case 'weekly':
-          return lastCompletionDate.difference(now).inDays >= 7;
-        case 'monthly':
-          return lastCompletionDate.month != now.month || 
-                 lastCompletionDate.year != now.year;
-        default:
-          return false;
-      }
+      // Find the last completion date
+      final lastCompletion = completionDates.isNotEmpty 
+        ? completionDates.reduce((a, b) => a.isAfter(b) ? a : b).toLocal()
+        : null;
+        
+      if (lastCompletion == null) return true;
+      
+      // Convert lastCompletion to start of day for comparison in local timezone
+      final lastCompletionDay = DateTime(
+        lastCompletion.year,
+        lastCompletion.month,
+        lastCompletion.day,
+      );
+      
+      // Return true if the last completion was before today (local timezone)
+      return lastCompletionDay.isBefore(today);
     }
     return false;
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
