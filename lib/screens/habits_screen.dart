@@ -580,7 +580,12 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             onNameChanged: (value) => name = value,
             onCategoryChanged: (value) => category = value ?? category,
             onFrequencyChanged: (value) => frequency = value ?? frequency,
-            onReminderTimeChanged: (value) => reminderTime = value,
+            onReminderTimeChanged: (value) {
+              reminderTime = value;
+              if (value == null) {
+                _notificationService.cancelReminder(habit.id);
+              }
+            },
             formKey: formKey,
           ),
           actions: [
@@ -595,19 +600,18 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   try {
-                    // Cancel existing notification
                     await _notificationService.cancelReminder(habit.id);
 
-                    final updatedHabit = habit.copyWith(
+                    var updatedHabit = habit.copyWith(reminderTime: null);
+                    updatedHabit = updatedHabit.copyWith(
                       name: name,
                       category: category,
                       frequency: frequency,
-                      reminderTime: reminderTime,
                       updatedAt: DateTime.now(),
                     );
-
-                    // Schedule new notification if reminder is set
+                    
                     if (reminderTime != null) {
+                      updatedHabit = updatedHabit.copyWith(reminderTime: reminderTime);
                       await _notificationService.scheduleHabitReminder(
                         id: updatedHabit.id,
                         habitName: updatedHabit.name,
@@ -616,27 +620,17 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     }
 
                     setState(() {
-                      final index = _habits.indexWhere(
-                            (h) => h.id == habit.id,
-                      );
+                      final index = _habits.indexWhere((h) => h.id == habit.id);
                       if (index != -1) {
                         _habits[index] = updatedHabit;
                       }
                     });
                     await _habitRepository.saveHabits(_habits);
+                    
+                    if (!mounted) return;
                     Navigator.pop(context);
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Habit updated successfully')),
-                      );
-                    }
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to update habit: $e')),
-                      );
-                    }
+                    if (!mounted) return;
                   }
                 }
               },

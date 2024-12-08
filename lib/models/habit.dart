@@ -54,7 +54,7 @@ class Habit {
       frequency: frequency ?? this.frequency,
       completedToday: completedToday ?? this.completedToday,
       progress: progress ?? this.progress,
-      reminderTime: reminderTime ?? this.reminderTime,
+      reminderTime: reminderTime == null ? null : (reminderTime),
       completionDates: completionDates ?? this.completionDates,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),

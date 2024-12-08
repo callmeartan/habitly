@@ -74,7 +74,7 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
-      'Time for your habit!',
+      'Time for your Habit!',
       '$message$habitName.',
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
