@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'interactive_time_picker.dart';
+import 'repeat_options_picker.dart';
 
 class TaskForm extends StatefulWidget {
   final String initialTitle;
@@ -11,6 +12,10 @@ class TaskForm extends StatefulWidget {
   final DateTime? initialDueDate;
   final TimeOfDay? initialDueTime;
   final DateTime? initialReminder;
+  final String? initialRepeatMode;
+  final List<int>? initialRepeatDays;
+  final int? initialRepeatInterval;
+  final DateTime? initialRepeatUntil;
   final Function(String) onTitleChanged;
   final Function(String) onDescriptionChanged;
   final Function(String?) onCategoryChanged;
@@ -18,6 +23,10 @@ class TaskForm extends StatefulWidget {
   final Function(DateTime?) onDueDateChanged;
   final Function(TimeOfDay?) onDueTimeChanged;
   final Function(DateTime?) onReminderChanged;
+  final Function(String?) onRepeatModeChanged;
+  final Function(List<int>?) onRepeatDaysChanged;
+  final Function(int?) onRepeatIntervalChanged;
+  final Function(DateTime?) onRepeatUntilChanged;
   final GlobalKey<FormState> formKey;
 
   const TaskForm({
@@ -29,6 +38,10 @@ class TaskForm extends StatefulWidget {
     this.initialDueDate,
     this.initialDueTime,
     this.initialReminder,
+    this.initialRepeatMode,
+    this.initialRepeatDays,
+    this.initialRepeatInterval,
+    this.initialRepeatUntil,
     required this.onTitleChanged,
     required this.onDescriptionChanged,
     required this.onCategoryChanged,
@@ -36,6 +49,10 @@ class TaskForm extends StatefulWidget {
     required this.onDueDateChanged,
     required this.onDueTimeChanged,
     required this.onReminderChanged,
+    required this.onRepeatModeChanged,
+    required this.onRepeatDaysChanged,
+    required this.onRepeatIntervalChanged,
+    required this.onRepeatUntilChanged,
     required this.formKey,
   }) : super(key: key);
 
@@ -83,6 +100,17 @@ class _TaskFormState extends State<TaskForm> {
             _buildDateTimeSection(colorScheme),
             const SizedBox(height: 32),
             _buildReminderPicker(colorScheme),
+            const SizedBox(height: 16),
+            RepeatOptionsPicker(
+              initialRepeatMode: widget.initialRepeatMode,
+              initialRepeatDays: widget.initialRepeatDays,
+              initialRepeatInterval: widget.initialRepeatInterval,
+              initialRepeatUntil: widget.initialRepeatUntil,
+              onRepeatModeChanged: widget.onRepeatModeChanged,
+              onRepeatDaysChanged: widget.onRepeatDaysChanged,
+              onRepeatIntervalChanged: widget.onRepeatIntervalChanged,
+              onRepeatUntilChanged: widget.onRepeatUntilChanged,
+            ),
           ],
         ),
       ),

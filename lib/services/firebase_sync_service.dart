@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart' show TimeOfDay;
 import '../models/habit.dart';
 import '../models/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,10 +57,17 @@ class FirebaseSyncService {
       batch.delete(doc.reference);
     }
 
-    // Then add all current tasks
+    // Then add all current tasks with recurring information
     for (var task in tasks) {
       final docRef = tasksRef.doc(task.id.toString());
-      batch.set(docRef, task.toJson());
+      final taskData = {
+        ...task.toJson(),
+        'repeatMode': task.repeatMode,
+        'repeatDays': task.repeatDays,
+        'repeatInterval': task.repeatInterval,
+        'repeatUntil': task.repeatUntil?.toIso8601String(),
+      };
+      batch.set(docRef, taskData);
     }
 
     await batch.commit();
@@ -80,11 +88,49 @@ class FirebaseSyncService {
   Future<List<Task>> fetchTasksFromCloud() async {
     if (currentUserId == null) return [];
 
-    final snapshot = await _tasksCollection(currentUserId!).get();
-    return snapshot.docs
-        .map((doc) => Task.fromJson(doc.data()))
-        .where((task) => !task.isDeleted)
-        .toList();
+    try {
+      final tasksRef = _tasksCollection(currentUserId!);
+      final snapshot = await tasksRef.get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        // Convert the repeating task data
+        return Task(
+          id: int.parse(doc.id),
+          userId: currentUserId!,
+          title: data['title'] ?? '',
+          description: data['description'] ?? '',
+          dueDate: DateTime.parse(data['dueDate']),
+          dueTime: data['dueTime'] != null
+              ? TimeOfDay(
+                  hour: int.parse(data['dueTime'].split(':')[0]),
+                  minute: int.parse(data['dueTime'].split(':')[1]),
+                )
+              : null,
+          priority: data['priority'] ?? 'Medium',
+          isCompleted: data['isCompleted'] ?? false,
+          category: data['category'] ?? 'Personal',
+          reminder: data['reminder'] != null
+              ? DateTime.parse(data['reminder'])
+              : null,
+          createdAt: DateTime.parse(data['createdAt']),
+          updatedAt: DateTime.parse(data['updatedAt']),
+          isDeleted: data['isDeleted'] ?? false,
+          // Add recurring task fields
+          repeatMode: data['repeatMode'],
+          repeatDays: data['repeatDays'] != null
+              ? List<int>.from(data['repeatDays'])
+              : null,
+          repeatInterval: data['repeatInterval'],
+          repeatUntil: data['repeatUntil'] != null
+              ? DateTime.parse(data['repeatUntil'])
+              : null,
+        );
+      }).toList();
+    } catch (e) {
+      print('Error fetching tasks from cloud: $e');
+      return [];
+    }
   }
 
   // Listen to Habit Changes

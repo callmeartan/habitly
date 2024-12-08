@@ -54,6 +54,10 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
     DateTime? dueDate = selectedDate;
     TimeOfDay? dueTime;
     DateTime? reminder;
+    String? repeatMode;
+    List<int>? repeatDays;
+    int? repeatInterval;
+    DateTime? repeatUntil;
 
     await showDialog(
       context: context,
@@ -66,62 +70,55 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Add New Task',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add Task',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: TaskForm(
-                      initialTitle: title,
-                      initialDescription: description,
-                      initialCategory: category,
-                      initialPriority: priority,
-                      initialDueDate: dueDate,
-                      initialDueTime: dueTime,
-                      initialReminder: reminder,
-                      onTitleChanged: (value) => title = value,
-                      onDescriptionChanged: (value) => description = value,
-                      onCategoryChanged: (value) => category = value ?? category,
-                      onPriorityChanged: (value) => priority = value ?? priority,
-                      onDueDateChanged: (value) => dueDate = value,
-                      onDueTimeChanged: (value) => dueTime = value,
-                      onReminderChanged: (value) => reminder = value,
-                      formKey: formKey,
-                    ),
+                  const SizedBox(height: 20),
+                  TaskForm(
+                    initialTitle: title,
+                    initialDescription: description,
+                    initialCategory: category,
+                    initialPriority: priority,
+                    initialDueDate: dueDate,
+                    initialDueTime: dueTime,
+                    initialReminder: reminder,
+                    initialRepeatMode: repeatMode,
+                    initialRepeatDays: repeatDays,
+                    initialRepeatInterval: repeatInterval,
+                    initialRepeatUntil: repeatUntil,
+                    formKey: formKey,
+                    onTitleChanged: (value) => title = value,
+                    onDescriptionChanged: (value) => description = value,
+                    onCategoryChanged: (value) => category = value ?? category,
+                    onPriorityChanged: (value) => priority = value ?? priority,
+                    onDueDateChanged: (value) => dueDate = value,
+                    onDueTimeChanged: (value) => dueTime = value,
+                    onReminderChanged: (value) => reminder = value,
+                    onRepeatModeChanged: (value) => repeatMode = value,
+                    onRepeatDaysChanged: (value) => repeatDays = value,
+                    onRepeatIntervalChanged: (value) => repeatInterval = value,
+                    onRepeatUntilChanged: (value) => repeatUntil = value,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.poppins(color: Colors.grey),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (formKey.currentState!.validate() && dueDate != null) {
-                          try {
-                            final newTaskId = widget.tasks.isEmpty
-                                ? 1
-                                : widget.tasks.map((t) => t.id).reduce(max) + 1;
-
-                            final newTask = Task(
-                              id: newTaskId,
-                              userId: _firebaseSyncService.currentUserId ?? '',
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final task = Task(
+                              id: DateTime.now().millisecondsSinceEpoch,
                               title: title,
                               description: description,
                               category: category,
@@ -129,57 +126,24 @@ class _TaskCalendarScreenState extends State<TaskCalendarScreen> {
                               dueDate: dueDate!,
                               dueTime: dueTime,
                               reminder: reminder,
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
+                              repeatMode: repeatMode,
+                              repeatDays: repeatDays,
+                              repeatInterval: repeatInterval,
+                              repeatUntil: repeatUntil,
                             );
 
-                            await _taskRepository.addTask(newTask);
-                            widget.onTaskAdded(newTask);
-
-                            if (reminder != null) {
-                              try {
-                                await _notificationService.scheduleTaskReminder(
-                                  id: newTask.id,
-                                  taskTitle: newTask.title,
-                                  scheduledTime: reminder,
-                                );
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Failed to set reminder: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-
-                            if (!mounted) return;
-                            Navigator.pop(context);
-                          } catch (e) {
+                            await widget.onTaskAdded(task);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to add task: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              Navigator.pop(context);
                             }
                           }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        },
+                        child: const Text('Add Task'),
                       ),
-                      child: Text(
-                        'Add Task',
-                        style: GoogleFonts.poppins(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

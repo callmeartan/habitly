@@ -129,6 +129,10 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     DateTime? dueDate = task.dueDate;
     TimeOfDay? dueTime = task.dueTime;
     DateTime? reminder = task.reminder;
+    String? repeatMode = task.repeatMode;
+    List<int>? repeatDays = task.repeatDays;
+    int? repeatInterval = task.repeatInterval;
+    DateTime? repeatUntil = task.repeatUntil;
 
     await showDialog(
       context: context,
@@ -141,57 +145,53 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Edit Task',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Edit Task',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: TaskForm(
-                      initialTitle: title,
-                      initialDescription: description,
-                      initialCategory: category,
-                      initialPriority: priority,
-                      initialDueDate: dueDate,
-                      initialDueTime: dueTime,
-                      initialReminder: reminder,
-                      onTitleChanged: (value) => title = value,
-                      onDescriptionChanged: (value) => description = value,
-                      onCategoryChanged: (value) => category = value ?? category,
-                      onPriorityChanged: (value) => priority = value ?? priority,
-                      onDueDateChanged: (value) => dueDate = value,
-                      onDueTimeChanged: (value) => dueTime = value,
-                      onReminderChanged: (value) => reminder = value,
-                      formKey: formKey,
-                    ),
+                  const SizedBox(height: 20),
+                  TaskForm(
+                    initialTitle: title,
+                    initialDescription: description,
+                    initialCategory: category,
+                    initialPriority: priority,
+                    initialDueDate: dueDate,
+                    initialDueTime: dueTime,
+                    initialReminder: reminder,
+                    initialRepeatMode: repeatMode,
+                    initialRepeatDays: repeatDays,
+                    initialRepeatInterval: repeatInterval,
+                    initialRepeatUntil: repeatUntil,
+                    formKey: formKey,
+                    onTitleChanged: (value) => title = value,
+                    onDescriptionChanged: (value) => description = value,
+                    onCategoryChanged: (value) => category = value ?? category,
+                    onPriorityChanged: (value) => priority = value ?? priority,
+                    onDueDateChanged: (value) => dueDate = value,
+                    onDueTimeChanged: (value) => dueTime = value,
+                    onReminderChanged: (value) => reminder = value,
+                    onRepeatModeChanged: (value) => repeatMode = value,
+                    onRepeatDaysChanged: (value) => repeatDays = value,
+                    onRepeatIntervalChanged: (value) => repeatInterval = value,
+                    onRepeatUntilChanged: (value) => repeatUntil = value,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey,
-                        ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (formKey.currentState!.validate() && dueDate != null) {
-                          try {
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
                             final updatedTask = task.copyWith(
                               title: title,
                               description: description,
@@ -200,62 +200,26 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               dueDate: dueDate,
                               dueTime: dueTime,
                               reminder: reminder,
+                              repeatMode: repeatMode,
+                              repeatDays: repeatDays,
+                              repeatInterval: repeatInterval,
+                              repeatUntil: repeatUntil,
+                              updatedAt: DateTime.now(),
                             );
 
-                            setState(() {
-                              final index = _tasks.indexWhere((t) => t.id == task.id);
-                              if (index != -1) {
-                                _tasks[index] = updatedTask;
-                              }
-                            });
-
                             await _taskRepository.updateTask(updatedTask);
-
-                            if (task.reminder != reminder) {
-                              try {
-                                // Cancel existing reminder if any
-                                await _notificationService.cancelReminder(task.id);
-
-                                // Schedule new reminder if set
-                                if (reminder != null) {
-                                  await _notificationService.scheduleTaskReminder(
-                                    id: task.id,
-                                    taskTitle: title,
-                                    scheduledTime: reminder,
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Failed to update reminder: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-
-                            if (!mounted) return;
-                            Navigator.pop(context);
-                          } catch (e) {
                             await _loadTasks();
+                            if (mounted) {
+                              Navigator.pop(context);
+                            }
                           }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        },
+                        child: const Text('Save Changes'),
                       ),
-                      child: Text(
-                        'Save Changes',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -269,9 +233,13 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     String description = '';
     String category = 'Personal';
     String priority = 'Medium';
-    DateTime? dueDate;
+    DateTime? dueDate = DateTime.now();
     TimeOfDay? dueTime;
     DateTime? reminder;
+    String? repeatMode;
+    List<int>? repeatDays;
+    int? repeatInterval;
+    DateTime? repeatUntil;
 
     await showDialog(
       context: context,
@@ -284,64 +252,55 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           child: Container(
             padding: const EdgeInsets.all(20),
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Add New Task',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add Task',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: TaskForm(
-                      initialTitle: title,
-                      initialDescription: description,
-                      initialCategory: category,
-                      initialPriority: priority,
-                      initialDueDate: dueDate,
-                      initialDueTime: dueTime,
-                      initialReminder: reminder,
-                      onTitleChanged: (value) => title = value,
-                      onDescriptionChanged: (value) => description = value,
-                      onCategoryChanged: (value) => category = value ?? category,
-                      onPriorityChanged: (value) => priority = value ?? priority,
-                      onDueDateChanged: (value) => dueDate = value,
-                      onDueTimeChanged: (value) => dueTime = value,
-                      onReminderChanged: (value) => reminder = value,
-                      formKey: formKey,
-                    ),
+                  const SizedBox(height: 20),
+                  TaskForm(
+                    initialTitle: title,
+                    initialDescription: description,
+                    initialCategory: category,
+                    initialPriority: priority,
+                    initialDueDate: dueDate,
+                    initialDueTime: dueTime,
+                    initialReminder: reminder,
+                    initialRepeatMode: repeatMode,
+                    initialRepeatDays: repeatDays,
+                    initialRepeatInterval: repeatInterval,
+                    initialRepeatUntil: repeatUntil,
+                    formKey: formKey,
+                    onTitleChanged: (value) => title = value,
+                    onDescriptionChanged: (value) => description = value,
+                    onCategoryChanged: (value) => category = value ?? category,
+                    onPriorityChanged: (value) => priority = value ?? priority,
+                    onDueDateChanged: (value) => dueDate = value,
+                    onDueTimeChanged: (value) => dueTime = value,
+                    onReminderChanged: (value) => reminder = value,
+                    onRepeatModeChanged: (value) => repeatMode = value,
+                    onRepeatDaysChanged: (value) => repeatDays = value,
+                    onRepeatIntervalChanged: (value) => repeatInterval = value,
+                    onRepeatUntilChanged: (value) => repeatUntil = value,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey,
-                        ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (formKey.currentState!.validate() && dueDate != null) {
-                          try {
-                            final newTaskId = _tasks.isEmpty
-                                ? 1
-                                : _tasks.map((t) => t.id).reduce(max) + 1;
-
-                            final newTask = Task(
-                              id: newTaskId,
-                              userId: _firebaseSyncService.currentUserId ?? '',
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            final task = Task(
+                              id: DateTime.now().millisecondsSinceEpoch,
                               title: title,
                               description: description,
                               category: category,
@@ -349,52 +308,25 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               dueDate: dueDate!,
                               dueTime: dueTime,
                               reminder: reminder,
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
+                              repeatMode: repeatMode,
+                              repeatDays: repeatDays,
+                              repeatInterval: repeatInterval,
+                              repeatUntil: repeatUntil,
                             );
 
-                            await _addTask(newTask);
+                            await _taskRepository.addTask(task);
                             await _loadTasks();
-
-                            if (reminder != null) {
-                              try {
-                                await _notificationService.scheduleTaskReminder(
-                                  id: newTask.id,
-                                  taskTitle: newTask.title,
-                                  scheduledTime: reminder,
-                                );
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Failed to set reminder: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
+                            if (mounted) {
+                              Navigator.pop(context);
                             }
-
-                            if (!mounted) return;
-                            Navigator.pop(context);
-                          } catch (e) {
-                            // Handle error silently
                           }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        },
+                        child: const Text('Add Task'),
                       ),
-                      child: Text(
-                        'Add Task',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

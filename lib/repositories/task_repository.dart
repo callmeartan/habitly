@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/models/task.dart';
 import '../services/firebase_sync_service.dart';
+import 'package:collection/collection.dart';
 
 class TaskRepository {
   static const String _key = 'tasks';
@@ -64,13 +65,59 @@ class TaskRepository {
       final index = tasks.indexWhere((task) => task.id == updatedTask.id);
 
       if (index != -1) {
-        tasks[index] = updatedTask;
+        // If changing a recurring task, update future occurrences
+        final oldTask = tasks[index];
+        if (oldTask.repeatMode != null && 
+            !_areRecurringSettingsEqual(oldTask, updatedTask)) {
+          await _updateFutureOccurrences(oldTask, updatedTask, tasks);
+        } else {
+          tasks[index] = updatedTask;
+        }
+        
         await saveTasks(tasks);
       } else {
         throw Exception('Task not found');
       }
     } catch (e) {
       throw Exception('Failed to update task: $e');
+    }
+  }
+
+  bool _areRecurringSettingsEqual(Task task1, Task task2) {
+    return task1.repeatMode == task2.repeatMode &&
+        task1.repeatInterval == task2.repeatInterval &&
+        task1.repeatUntil == task2.repeatUntil &&
+        const ListEquality().equals(task1.repeatDays, task2.repeatDays);
+  }
+
+  Future<void> _updateFutureOccurrences(
+    Task oldTask,
+    Task updatedTask,
+    List<Task> tasks,
+  ) async {
+    // Find all future occurrences of this recurring task
+    final futureOccurrences = tasks.where((task) =>
+        task.repeatMode == oldTask.repeatMode &&
+        task.dueDate.isAfter(oldTask.dueDate) &&
+        !task.isCompleted).toList();
+
+    // Update or remove future occurrences based on new settings
+    if (updatedTask.repeatMode == null) {
+      // Remove future occurrences if recurring is disabled
+      tasks.removeWhere((task) => futureOccurrences.contains(task));
+    } else {
+      // Update future occurrences with new settings
+      for (final occurrence in futureOccurrences) {
+        final index = tasks.indexWhere((t) => t.id == occurrence.id);
+        if (index != -1) {
+          tasks[index] = occurrence.copyWith(
+            repeatMode: updatedTask.repeatMode,
+            repeatInterval: updatedTask.repeatInterval,
+            repeatDays: updatedTask.repeatDays,
+            repeatUntil: updatedTask.repeatUntil,
+          );
+        }
+      }
     }
   }
 
@@ -95,19 +142,160 @@ class TaskRepository {
   Future<void> toggleTaskCompletion(int taskId) async {
     try {
       final tasks = await loadTasks();
-      final index = tasks.indexWhere((task) => task.id == taskId);
+      final taskIndex = tasks.indexWhere((t) => t.id == taskId);
 
-      if (index != -1) {
-        tasks[index] = tasks[index].copyWith(
-          isCompleted: !tasks[index].isCompleted,
-        );
+      if (taskIndex != -1) {
+        final task = tasks[taskIndex];
+        
+        // If the task is recurring, create next instance
+        if (task.repeatMode != null && !task.isCompleted) {
+          await _handleRecurringTaskCompletion(task, tasks);
+        } else {
+          // For non-recurring tasks, simply toggle completion
+          tasks[taskIndex] = task.copyWith(
+            isCompleted: !task.isCompleted,
+            updatedAt: DateTime.now(),
+          );
+        }
+
         await saveTasks(tasks);
-      } else {
-        throw Exception('Task not found');
       }
     } catch (e) {
       throw Exception('Failed to toggle task completion: $e');
     }
+  }
+
+  Future<void> _handleRecurringTaskCompletion(Task task, List<Task> tasks) async {
+    try {
+      // 1. Mark current instance as completed
+      final currentIndex = tasks.indexWhere((t) => t.id == task.id);
+      final completedTask = task.copyWith(
+        isCompleted: true,
+        updatedAt: DateTime.now(),
+      );
+      tasks[currentIndex] = completedTask;
+
+      // 2. Calculate next occurrence
+      final nextDueDate = _calculateNextOccurrence(task);
+      
+      // 3. Create next instance if within end date
+      if (nextDueDate != null && 
+          (task.repeatUntil == null || nextDueDate.isBefore(task.repeatUntil!))) {
+        final newTask = Task(
+          id: DateTime.now().millisecondsSinceEpoch,
+          userId: task.userId,
+          title: task.title,
+          description: task.description,
+          dueDate: nextDueDate,
+          dueTime: task.dueTime,
+          priority: task.priority,
+          category: task.category,
+          isCompleted: false,
+          reminder: task.reminder,
+          repeatMode: task.repeatMode,
+          repeatDays: task.repeatDays,
+          repeatInterval: task.repeatInterval,
+          repeatUntil: task.repeatUntil,
+        );
+        
+        tasks.add(newTask);
+      }
+
+      // 4. Save both completed task and new instance
+      await saveTasks(tasks);
+      
+      // 5. Sync with Firebase
+      await _firebaseSyncService.syncTasksToCloud(tasks);
+    } catch (e) {
+      print('Failed to handle recurring task completion: $e');
+      rethrow;
+    }
+  }
+
+  DateTime? _calculateNextOccurrence(Task task) {
+    if (task.repeatMode == null) return null;
+
+    DateTime nextDate = task.dueDate;
+    final now = DateTime.now();
+
+    do {
+      switch (task.repeatMode) {
+        case 'daily':
+          nextDate = nextDate.add(Duration(days: task.repeatInterval ?? 1));
+          break;
+          
+        case 'weekly':
+          if (task.repeatDays?.isNotEmpty ?? false) {
+            // Find next day in repeatDays
+            int currentWeekday = nextDate.weekday;
+            List<int> sortedDays = [...task.repeatDays!]..sort();
+            
+            // Find next weekday in the list
+            int? nextWeekday = sortedDays
+                .firstWhere((day) => day > currentWeekday, 
+                    orElse: () => sortedDays.first);
+            
+            if (nextWeekday <= currentWeekday) {
+              // Move to next week if no remaining days this week
+              nextDate = nextDate.add(
+                Duration(days: 7 * (task.repeatInterval ?? 1) - 
+                    currentWeekday + nextWeekday));
+            } else {
+              nextDate = nextDate.add(Duration(days: nextWeekday - currentWeekday));
+            }
+          } else {
+            // Simple weekly repeat
+            nextDate = nextDate.add(Duration(days: 7 * (task.repeatInterval ?? 1)));
+          }
+          break;
+          
+        case 'monthly':
+          // Handle month overflow
+          int year = nextDate.year;
+          int month = nextDate.month + (task.repeatInterval ?? 1);
+          while (month > 12) {
+            month -= 12;
+            year++;
+          }
+          
+          // Handle invalid dates (e.g., March 31 -> April 30)
+          int day = nextDate.day;
+          while (true) {
+            try {
+              nextDate = DateTime(year, month, day);
+              break;
+            } catch (e) {
+              day--;
+              if (day <= 0) break;
+            }
+          }
+          break;
+          
+        case 'yearly':
+          nextDate = DateTime(
+            nextDate.year + (task.repeatInterval ?? 1),
+            nextDate.month,
+            nextDate.day,
+          );
+          break;
+          
+        default:
+          return null;
+      }
+    } while (nextDate.isBefore(now));
+
+    // If task has a due time, preserve it
+    if (task.dueTime != null) {
+      nextDate = DateTime(
+        nextDate.year,
+        nextDate.month,
+        nextDate.day,
+        task.dueTime!.hour,
+        task.dueTime!.minute,
+      );
+    }
+
+    return nextDate;
   }
 
   Future<List<Task>> getTasksByCategory(String category) async {
@@ -212,7 +400,8 @@ class TaskRepository {
       final cloudTasks = await _firebaseSyncService.fetchTasksFromCloud();
       await saveTasks(cloudTasks);
     } catch (e) {
-      throw Exception('Failed to sync tasks from cloud: $e');
+      print('Failed to sync tasks from cloud: $e');
+      rethrow;
     }
   }
 

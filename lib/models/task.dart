@@ -14,6 +14,10 @@ class Task {
   DateTime createdAt;
   DateTime updatedAt;
   bool isDeleted;
+  String? repeatMode;
+  List<int>? repeatDays;
+  int? repeatInterval;
+  DateTime? repeatUntil;
 
   Task({
     required this.id,
@@ -29,6 +33,10 @@ class Task {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.isDeleted = false,
+    this.repeatMode,
+    this.repeatDays,
+    this.repeatInterval = 1,
+    this.repeatUntil,
   }) :
         userId = userId ?? '',
         createdAt = createdAt ?? DateTime.now(),
@@ -45,6 +53,10 @@ class Task {
     DateTime? reminder,
     DateTime? updatedAt,
     bool? isDeleted,
+    String? repeatMode,
+    List<int>? repeatDays,
+    int? repeatInterval,
+    DateTime? repeatUntil,
   }) {
     return Task(
       id: id,
@@ -60,6 +72,10 @@ class Task {
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isDeleted: isDeleted ?? this.isDeleted,
+      repeatMode: repeatMode ?? this.repeatMode,
+      repeatDays: repeatDays ?? this.repeatDays,
+      repeatInterval: repeatInterval ?? this.repeatInterval,
+      repeatUntil: repeatUntil ?? this.repeatUntil,
     );
   }
 
@@ -79,6 +95,10 @@ class Task {
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'isDeleted': isDeleted,
+    'repeatMode': repeatMode,
+    'repeatDays': repeatDays,
+    'repeatInterval': repeatInterval,
+    'repeatUntil': repeatUntil?.toIso8601String(),
   };
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -107,6 +127,62 @@ class Task {
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
       isDeleted: json['isDeleted'] ?? false,
+      repeatMode: json['repeatMode'],
+      repeatDays: json['repeatDays'] != null 
+          ? List<int>.from(json['repeatDays'])
+          : null,
+      repeatInterval: json['repeatInterval'],
+      repeatUntil: json['repeatUntil'] != null
+          ? DateTime.parse(json['repeatUntil'])
+          : null,
     );
+  }
+
+  DateTime getNextOccurrence() {
+    if (repeatMode == null) return dueDate;
+
+    DateTime nextDate = dueDate;
+    final now = DateTime.now();
+
+    while (nextDate.isBefore(now)) {
+      switch (repeatMode) {
+        case 'daily':
+          nextDate = nextDate.add(Duration(days: repeatInterval ?? 1));
+          break;
+        case 'weekly':
+          if (repeatDays != null && repeatDays!.isNotEmpty) {
+            DateTime temp = nextDate.add(const Duration(days: 1));
+            while (!repeatDays!.contains(temp.weekday)) {
+              temp = temp.add(const Duration(days: 1));
+            }
+            nextDate = temp;
+          } else {
+            nextDate = nextDate.add(Duration(days: 7 * (repeatInterval ?? 1)));
+          }
+          break;
+        case 'monthly':
+          nextDate = DateTime(
+            nextDate.year,
+            nextDate.month + (repeatInterval ?? 1),
+            nextDate.day,
+          );
+          break;
+        case 'yearly':
+          nextDate = DateTime(
+            nextDate.year + (repeatInterval ?? 1),
+            nextDate.month,
+            nextDate.day,
+          );
+          break;
+        default:
+          return dueDate;
+      }
+
+      if (repeatUntil != null && nextDate.isAfter(repeatUntil!)) {
+        return dueDate;
+      }
+    }
+
+    return nextDate;
   }
 }
