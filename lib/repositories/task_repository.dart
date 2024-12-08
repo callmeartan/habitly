@@ -3,11 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '/models/task.dart';
 import '../services/firebase_sync_service.dart';
 import 'package:collection/collection.dart';
+import '../services/notification_service.dart';
 
 class TaskRepository {
   static const String _key = 'tasks';
   static const String _offlineDataKey = 'has_offline_tasks_to_merge';
   final FirebaseSyncService _firebaseSyncService = FirebaseSyncService();
+  final NotificationService _notificationService = NotificationService();
 
   Future<void> saveTasks(List<Task> tasks) async {
     try {
@@ -15,7 +17,11 @@ class TaskRepository {
       final tasksJson = tasks.map((task) => task.toJson()).toList();
       await prefs.setString(_key, jsonEncode(tasksJson));
 
-      await _firebaseSyncService.syncTasksToCloud(tasks);
+      try {
+        await _firebaseSyncService.syncTasksToCloud(tasks);
+      } catch (e) {
+        // Handle sync error silently but keep local changes
+      }
     } catch (e) {
       throw Exception('Failed to save tasks: $e');
     }
@@ -24,24 +30,18 @@ class TaskRepository {
   Future<List<Task>> loadTasks() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isOfflineMode = prefs.getBool('offline_mode') ?? true;
-
-      // If online and user is signed in, prioritize cloud data
-      if (!isOfflineMode && _firebaseSyncService.isUserSignedIn) {
-        final cloudTasks = await _firebaseSyncService.fetchTasksFromCloud();
-        // Save cloud data locally
-        final tasksJson = cloudTasks.map((task) => task.toJson()).toList();
-        await prefs.setString(_key, jsonEncode(tasksJson));
-        return cloudTasks;
+      final tasksString = prefs.getString(_key);
+      
+      if (tasksString == null && _firebaseSyncService.isUserSignedIn) {
+        await syncOnLogin();
+        return loadTasks();
       }
 
-      // Otherwise load local data
-      final tasksString = prefs.getString(_key);
       if (tasksString == null) return [];
 
       final tasksList = jsonDecode(tasksString) as List;
       return tasksList
-          .map((taskJson) => Task.fromJson(taskJson))
+          .map((taskJson) => Task.fromJson(taskJson as Map<String, dynamic>))
           .where((task) => !task.isDeleted)
           .toList();
     } catch (e) {
@@ -63,15 +63,27 @@ class TaskRepository {
     try {
       final tasks = await loadTasks();
       final index = tasks.indexWhere((task) => task.id == updatedTask.id);
-
+      
       if (index != -1) {
-        // If changing a recurring task, update future occurrences
         final oldTask = tasks[index];
-        if (oldTask.repeatMode != null && 
-            !_areRecurringSettingsEqual(oldTask, updatedTask)) {
+        tasks[index] = updatedTask;
+        
+        if (oldTask.reminder != updatedTask.reminder) {
+          if (oldTask.reminder != null) {
+            await _notificationService.cancelReminder(oldTask.id);
+          }
+          
+          if (updatedTask.reminder != null) {
+            await _notificationService.scheduleTaskReminder(
+              id: updatedTask.id,
+              taskTitle: updatedTask.title,
+              scheduledTime: updatedTask.reminder!,
+            );
+          }
+        }
+        
+        if (!_areRecurringSettingsEqual(oldTask, updatedTask)) {
           await _updateFutureOccurrences(oldTask, updatedTask, tasks);
-        } else {
-          tasks[index] = updatedTask;
         }
         
         await saveTasks(tasks);
@@ -127,7 +139,6 @@ class TaskRepository {
       final taskIndex = tasks.indexWhere((t) => t.id == taskId);
 
       if (taskIndex != -1) {
-        // Instead of removing, mark as deleted
         tasks[taskIndex] = tasks[taskIndex].copyWith(
           isDeleted: true,
           updatedAt: DateTime.now(),
@@ -445,10 +456,29 @@ class TaskRepository {
 
       final tasksList = jsonDecode(tasksString) as List;
       return tasksList
-          .map((taskJson) => Task.fromJson(taskJson))
+          .map((taskJson) => Task.fromJson(taskJson as Map<String, dynamic>))
           .toList(); // Note: This returns all tasks, including deleted ones
     } catch (e) {
       throw Exception('Failed to load tasks: $e');
+    }
+  }
+
+  Future<Task?> getTaskById(int id) async {
+    try {
+      final tasks = await loadTasks();
+      return tasks.firstWhere((task) => task.id == id);
+    } catch (e) {
+      print('Error fetching task by ID: $e');
+      return null;
+    }
+  }
+
+  Future<void> syncOnLogin() async {
+    try {
+      final cloudTasks = await _firebaseSyncService.fetchTasksFromCloud();
+      await saveTasks(cloudTasks);
+    } catch (e) {
+      throw Exception('Failed to sync tasks on login: $e');
     }
   }
 }

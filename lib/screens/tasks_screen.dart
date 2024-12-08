@@ -198,7 +198,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
                             try {
-                              // Cancel existing reminder first
                               await _notificationService.cancelReminder(task.id);
 
                               final updatedTask = task.copyWith(
@@ -210,28 +209,24 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                                 dueTime: dueTime,
                                 reminder: reminder,
                                 repeatMode: repeatMode,
-                                repeatDays: repeatDays,
-                                repeatInterval: repeatInterval,
-                                repeatUntil: repeatUntil,
+                                repeatDays: repeatMode == null ? null : repeatDays,
+                                repeatInterval: repeatMode == null ? null : repeatInterval,
+                                repeatUntil: repeatMode == null ? null : repeatUntil,
                                 updatedAt: DateTime.now(),
                               );
 
-                              // Schedule new reminder if needed
-                              if (reminder != null) {
-                                await _notificationService.scheduleTaskReminder(
-                                  id: updatedTask.id,
-                                  taskTitle: updatedTask.title,
-                                  scheduledTime: reminder,
-                                );
-                              }
-
                               await _taskRepository.updateTask(updatedTask);
                               await _loadTasks();
+
                               if (mounted) {
                                 Navigator.pop(context);
                               }
                             } catch (e) {
-                              // Handle error appropriately
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to update task: $e')),
+                                );
+                              }
                             }
                           }
                         },

@@ -26,8 +26,8 @@ android {
         applicationId = "dev.artan.habitly"
         minSdkVersion = 23
         targetSdkVersion = 34
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode 2
+        versionName "1.8.0"
     }
 
     buildTypes {

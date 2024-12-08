@@ -72,10 +72,10 @@ class Task {
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isDeleted: isDeleted ?? this.isDeleted,
-      repeatMode: repeatMode ?? this.repeatMode,
-      repeatDays: repeatDays ?? this.repeatDays,
-      repeatInterval: repeatInterval ?? this.repeatInterval,
-      repeatUntil: repeatUntil ?? this.repeatUntil,
+      repeatMode: repeatMode,
+      repeatDays: repeatDays,
+      repeatInterval: repeatInterval,
+      repeatUntil: repeatUntil,
     );
   }
 
