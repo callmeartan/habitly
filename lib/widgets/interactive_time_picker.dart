@@ -28,12 +28,16 @@ class _InteractiveTimePickerState extends State<InteractiveTimePicker> {
   void initState() {
     super.initState();
     final now = widget.initialTime ?? DateTime.now();
-    _selectedHour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    _selectedHour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
     _selectedMinute = now.minute;
     _isAM = now.hour < 12;
     
-    _hourController = TextEditingController(text: _selectedHour.toString().padLeft(2, '0'));
-    _minuteController = TextEditingController(text: _selectedMinute.toString().padLeft(2, '0'));
+    _hourController = TextEditingController(
+      text: _selectedHour.toString().padLeft(2, '0'),
+    );
+    _minuteController = TextEditingController(
+      text: _selectedMinute.toString().padLeft(2, '0'),
+    );
     _hourFocus = FocusNode();
     _minuteFocus = FocusNode();
   }
@@ -113,15 +117,17 @@ class _InteractiveTimePickerState extends State<InteractiveTimePicker> {
             focusNode: _hourFocus,
             nextFocus: _minuteFocus,
             onChanged: (value) {
-              if (value.isNotEmpty) {
-                final hour = int.parse(value);
-                if (hour >= 1 && hour <= 12) {
-                  _selectedHour = hour;
-                } else {
-                  _hourController.text = _selectedHour.toString().padLeft(2, '0');
-                }
-                if (value.length == 2) _minuteFocus.requestFocus();
+              if (value.isEmpty) {
+                setState(() => _selectedHour = 12);
+                return;
               }
+              final hour = int.parse(value);
+              if (hour >= 1 && hour <= 12) {
+                setState(() => _selectedHour = hour);
+              } else {
+                _hourController.text = _selectedHour.toString().padLeft(2, '0');
+              }
+              if (value.length == 2) _minuteFocus.requestFocus();
             },
             colorScheme: colorScheme,
           ),
@@ -140,13 +146,15 @@ class _InteractiveTimePickerState extends State<InteractiveTimePicker> {
             controller: _minuteController,
             focusNode: _minuteFocus,
             onChanged: (value) {
-              if (value.isNotEmpty) {
-                final minute = int.parse(value);
-                if (minute >= 0 && minute <= 59) {
-                  _selectedMinute = minute;
-                } else {
-                  _minuteController.text = _selectedMinute.toString().padLeft(2, '0');
-                }
+              if (value.isEmpty) {
+                setState(() => _selectedMinute = 0);
+                return;
+              }
+              final minute = int.parse(value);
+              if (minute >= 0 && minute <= 59) {
+                setState(() => _selectedMinute = minute);
+              } else {
+                _minuteController.text = _selectedMinute.toString().padLeft(2, '0');
               }
             },
             colorScheme: colorScheme,
@@ -191,12 +199,27 @@ class _InteractiveTimePickerState extends State<InteractiveTimePicker> {
           color: colorScheme.onSurface,
         ),
         onChanged: (value) {
+          if (value.isEmpty) {
+            onChanged(value);
+            return;
+          }
+          
           if (value.length > 2) {
             controller.text = value.substring(0, 2);
             controller.selection = TextSelection.fromPosition(
               TextPosition(offset: controller.text.length),
             );
+            return;
           }
+
+          if (!RegExp(r'^[0-9]*$').hasMatch(value)) {
+            controller.text = value.replaceAll(RegExp(r'[^0-9]'), '');
+            controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: controller.text.length),
+            );
+            return;
+          }
+
           onChanged(value);
         },
       ),
@@ -271,12 +294,13 @@ class _InteractiveTimePickerState extends State<InteractiveTimePicker> {
           Expanded(
             child: FilledButton(
               onPressed: () {
-                final hour = _isAM ? _selectedHour : _selectedHour + 12;
+                final baseHour = _selectedHour % 12;
+                final hour = _isAM ? baseHour : baseHour + 12;
                 final time = DateTime(
                   DateTime.now().year,
                   DateTime.now().month,
                   DateTime.now().day,
-                  hour == 24 ? 0 : hour,
+                  hour,
                   _selectedMinute,
                 );
                 widget.onTimeSelected(time);

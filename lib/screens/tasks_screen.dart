@@ -33,7 +33,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 1);
     _loadTasks();
   }
 
@@ -174,7 +174,12 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                     onPriorityChanged: (value) => priority = value ?? priority,
                     onDueDateChanged: (value) => dueDate = value,
                     onDueTimeChanged: (value) => dueTime = value,
-                    onReminderChanged: (value) => reminder = value,
+                    onReminderChanged: (value) {
+                      reminder = value;
+                      if (value == null) {
+                        _notificationService.cancelReminder(task.id);
+                      }
+                    },
                     onRepeatModeChanged: (value) => repeatMode = value,
                     onRepeatDaysChanged: (value) => repeatDays = value,
                     onRepeatIntervalChanged: (value) => repeatInterval = value,
@@ -192,25 +197,41 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       ElevatedButton(
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            final updatedTask = task.copyWith(
-                              title: title,
-                              description: description,
-                              category: category,
-                              priority: priority,
-                              dueDate: dueDate,
-                              dueTime: dueTime,
-                              reminder: reminder,
-                              repeatMode: repeatMode,
-                              repeatDays: repeatDays,
-                              repeatInterval: repeatInterval,
-                              repeatUntil: repeatUntil,
-                              updatedAt: DateTime.now(),
-                            );
+                            try {
+                              // Cancel existing reminder first
+                              await _notificationService.cancelReminder(task.id);
 
-                            await _taskRepository.updateTask(updatedTask);
-                            await _loadTasks();
-                            if (mounted) {
-                              Navigator.pop(context);
+                              final updatedTask = task.copyWith(
+                                title: title,
+                                description: description,
+                                category: category,
+                                priority: priority,
+                                dueDate: dueDate,
+                                dueTime: dueTime,
+                                reminder: reminder,
+                                repeatMode: repeatMode,
+                                repeatDays: repeatDays,
+                                repeatInterval: repeatInterval,
+                                repeatUntil: repeatUntil,
+                                updatedAt: DateTime.now(),
+                              );
+
+                              // Schedule new reminder if needed
+                              if (reminder != null) {
+                                await _notificationService.scheduleTaskReminder(
+                                  id: updatedTask.id,
+                                  taskTitle: updatedTask.title,
+                                  scheduledTime: reminder,
+                                );
+                              }
+
+                              await _taskRepository.updateTask(updatedTask);
+                              await _loadTasks();
+                              if (mounted) {
+                                Navigator.pop(context);
+                              }
+                            } catch (e) {
+                              // Handle error appropriately
                             }
                           }
                         },
@@ -299,14 +320,18 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       ElevatedButton(
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
+                            // Generate a notification-safe ID
+                            final taskId = DateTime.now().millisecondsSinceEpoch % 100000000;
+                            
                             final task = Task(
-                              id: DateTime.now().millisecondsSinceEpoch,
+                              id: taskId,  // Use the safe ID
+                              userId: '',  // Or get from auth
                               title: title,
                               description: description,
-                              category: category,
-                              priority: priority,
-                              dueDate: dueDate!,
+                              dueDate: dueDate ?? DateTime.now(),
                               dueTime: dueTime,
+                              priority: priority,
+                              category: category,
                               reminder: reminder,
                               repeatMode: repeatMode,
                               repeatDays: repeatDays,
@@ -314,8 +339,17 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                               repeatUntil: repeatUntil,
                             );
 
+                            if (reminder != null) {
+                              await _notificationService.scheduleTaskReminder(
+                                id: taskId,  // Use the safe ID
+                                taskTitle: title,
+                                scheduledTime: reminder,
+                              );
+                            }
+
                             await _taskRepository.addTask(task);
                             await _loadTasks();
+                            widget.onTaskUpdated();
                             if (mounted) {
                               Navigator.pop(context);
                             }

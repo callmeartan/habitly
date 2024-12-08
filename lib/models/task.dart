@@ -68,7 +68,7 @@ class Task {
       priority: priority ?? this.priority,
       isCompleted: isCompleted ?? this.isCompleted,
       category: category ?? this.category,
-      reminder: reminder ?? this.reminder,
+      reminder: reminder,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isDeleted: isDeleted ?? this.isDeleted,

@@ -106,33 +106,36 @@ class NotificationService {
   }) async {
     if (scheduledTime == null) return;
 
-    final message = taskReminderMessages[Random().nextInt(taskReminderMessages.length)];
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      'Task Reminder',
-      '$message$taskTitle\'',
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'task_reminders',
-          'Task Reminders',
-          channelDescription: 'Notifications for task reminders',
-          importance: Importance.high,
-          priority: Priority.high,
+    try {
+      final message = taskReminderMessages[Random().nextInt(taskReminderMessages.length)];
+      
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        'Task Reminder',
+        '$message$taskTitle\'',
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'task_reminders',
+            'Task Reminders',
+            channelDescription: 'Notifications for task reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(
+            sound: 'default.wav',
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          sound: 'default.wav',
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> cancelReminder(int id) async {
