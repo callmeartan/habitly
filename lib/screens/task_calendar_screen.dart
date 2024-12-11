@@ -10,7 +10,7 @@ import 'dart:math' show max;
 
 class TaskCalendarScreen extends StatefulWidget {
   final List<Task> tasks;
-  final Function(Task) onTaskAdded;
+  final Future<void> Function(Task) onTaskAdded;
 
   const TaskCalendarScreen({
     Key? key,

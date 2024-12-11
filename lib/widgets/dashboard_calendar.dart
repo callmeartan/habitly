@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/task.dart';
 import '../screens/task_calendar_screen.dart';
+import '../repositories/task_repository.dart';
 
 class DashboardCalendar extends StatelessWidget {
   final List<Task> tasks;
@@ -95,8 +96,15 @@ class DashboardCalendar extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => TaskCalendarScreen(
                         tasks: tasks,
-                        onTaskAdded: (Task newTask) {
-                          // Handle adding the new task
+                        onTaskAdded: (Task newTask) async {
+                          try {
+                            final taskRepository = TaskRepository();
+                            await taskRepository.addTask(newTask);
+                            // Optionally refresh the tasks list or show a success message
+                          } catch (e) {
+                            print('Error adding task: $e');
+                            // Optionally show an error message
+                          }
                         },
                       ),
                     ),
