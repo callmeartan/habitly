@@ -183,7 +183,7 @@ class _HabitCardState extends State<HabitCard> with SingleTickerProviderStateMix
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Streak: ${widget.habit.streak} days',
+                      'Streak: ${widget.habit.getCurrentStreak()} days',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: progressColor.withOpacity(0.7),
