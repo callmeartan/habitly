@@ -12,6 +12,7 @@ import '../widgets/dashboard_stats.dart';
 import '../widgets/error_view.dart';
 import '../widgets/streak_overview.dart';
 import '../providers/navigation_state.dart';
+import '../widgets/taskpiechart.dart';
 
 class HabitDashboard extends StatefulWidget {
   const HabitDashboard({Key? key}) : super(key: key);
@@ -240,6 +241,11 @@ class HabitDashboardState extends State<HabitDashboard> {
                     ),
                     const SizedBox(height: 16),
                     StreakOverview(habits: habits),
+                    const SizedBox(height: 16),
+                    TaskPieChart(
+                      tasks: _tasks,
+                      selectedMonth: DateTime.now(),
+                    ),
                     const SizedBox(height: 16),
                   ],
                 ),
