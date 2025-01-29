@@ -441,13 +441,20 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
   }
 
   Widget _buildUpcomingTasksList(Color progressColor) {
-    final today = DateTime.now();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final upcomingTasks = _tasks.where((task) {
-      final isToday = task.dueDate.year == today.year &&
-                      task.dueDate.month == today.month &&
-                      task.dueDate.day == today.day;
-      return (task.dueDate.isAfter(today) || isToday) && !task.isCompleted;
+      final taskDate = DateTime(
+        task.dueDate.year,
+        task.dueDate.month,
+        task.dueDate.day,
+      );
+      return !task.isCompleted;  // Show all incomplete tasks
     }).toList();
+    
+    // Sort tasks by due date
+    upcomingTasks.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    
     return _buildTaskList(upcomingTasks, progressColor);
   }
 

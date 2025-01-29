@@ -26,8 +26,8 @@ android {
         applicationId = "dev.artan.habitly"
         minSdkVersion = 23
         targetSdkVersion = 34
-        versionCode 2
-        versionName "1.8.0"
+        versionCode 4
+        versionName "2.0.2"
     }
 
     buildTypes {
